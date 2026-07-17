@@ -1,0 +1,38 @@
+/**
+ * Maps raw design tokens (./tokens.css) into Tailwind v4's theme namespace,
+ * so utilities like `bg-primary` or `min-h-touch` are available everywhere
+ * that imports this file.
+ */
+@theme {
+  --color-background: hsl(var(--palette-bg));
+  --color-surface: hsl(var(--palette-surface));
+  --color-surface-raised: hsl(var(--palette-surface-raised));
+  --color-border: hsl(var(--palette-border));
+
+  --color-foreground: hsl(var(--palette-text));
+  --color-foreground-muted: hsl(var(--palette-text-muted));
+
+  --color-primary: hsl(var(--palette-primary));
+  --color-primary-foreground: hsl(var(--palette-primary-foreground));
+
+  --color-secondary: hsl(var(--palette-secondary));
+  --color-secondary-foreground: hsl(var(--palette-secondary-foreground));
+
+  --color-success: hsl(var(--palette-success));
+  --color-success-foreground: hsl(var(--palette-success-foreground));
+
+  --color-danger: hsl(var(--palette-danger));
+  --color-danger-foreground: hsl(var(--palette-danger-foreground));
+
+  --color-ring: hsl(var(--palette-focus-ring));
+
+  --transition-duration-fast: var(--palette-motion-fast);
+  --transition-duration-standard: var(--palette-motion-standard);
+  --transition-duration-celebration: var(--palette-motion-celebration);
+  --ease-momentum: var(--palette-motion-ease);
+
+  --min-height-touch: var(--palette-touch-target-min);
+  --min-width-touch: var(--palette-touch-target-min);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}

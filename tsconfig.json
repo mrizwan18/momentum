@@ -1,0 +1,21 @@
+{
+  "extends": "./packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./apps/app/src/*"],
+      "@momentum/ui": ["./packages/ui/src"],
+      "@momentum/ui/*": ["./packages/ui/src/*"],
+      "@momentum/engine": ["./packages/engine/src"],
+      "@momentum/engine/*": ["./packages/engine/src/*"],
+      "@momentum/storage": ["./packages/storage/src"],
+      "@momentum/storage/*": ["./packages/storage/src/*"],
+      "@momentum/types": ["./packages/types/src"],
+      "@momentum/types/*": ["./packages/types/src/*"],
+      "@momentum/utils": ["./packages/utils/src"],
+      "@momentum/utils/*": ["./packages/utils/src/*"]
+    }
+  },
+  "include": ["tests/**/*.ts"],
+  "exclude": ["node_modules", "apps/*/node_modules", "packages/*/node_modules"]
+}

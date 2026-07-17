@@ -1,0 +1,77 @@
+/**
+ * Momentum design tokens (docs/design/design-language.md).
+ * HSL triplets (no hsl() wrapper) so Tailwind can apply alpha via
+ * hsl(var(--palette-x) / <alpha-value>).
+ *
+ * Dark is the default theme; [data-theme="light"] overrides it.
+ */
+:root {
+  color-scheme: dark;
+
+  --palette-bg: 222 20% 8%;
+  --palette-surface: 222 17% 12%;
+  --palette-surface-raised: 222 15% 16%;
+  --palette-border: 222 12% 22%;
+
+  --palette-text: 40 20% 96%;
+  --palette-text-muted: 220 10% 65%;
+
+  /* Warm orange: achievement, progress, action */
+  --palette-primary: 28 92% 58%;
+  --palette-primary-foreground: 24 40% 10%;
+
+  /* Muted teal: guidance, coaching, learning */
+  --palette-secondary: 187 45% 45%;
+  --palette-secondary-foreground: 187 60% 96%;
+
+  /* Green: completion only */
+  --palette-success: 152 55% 45%;
+  --palette-success-foreground: 152 60% 10%;
+
+  /* Red: reserved for destructive actions only, never for "poor performance" */
+  --palette-danger: 4 72% 55%;
+  --palette-danger-foreground: 0 0% 100%;
+
+  --palette-focus-ring: 28 92% 58%;
+
+  --palette-motion-fast: 150ms;
+  --palette-motion-standard: 250ms;
+  --palette-motion-celebration: 500ms;
+  --palette-motion-ease: cubic-bezier(0, 0, 0.2, 1);
+
+  --palette-touch-target-min: 44px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --palette-bg: 40 33% 98%;
+  --palette-surface: 0 0% 100%;
+  --palette-surface-raised: 40 20% 97%;
+  --palette-border: 220 14% 88%;
+
+  --palette-text: 222 30% 12%;
+  --palette-text-muted: 220 10% 40%;
+
+  --palette-primary: 28 88% 48%;
+  --palette-primary-foreground: 0 0% 100%;
+
+  --palette-secondary: 187 50% 32%;
+  --palette-secondary-foreground: 0 0% 100%;
+
+  --palette-success: 152 45% 32%;
+  --palette-success-foreground: 0 0% 100%;
+
+  --palette-danger: 4 70% 45%;
+  --palette-danger-foreground: 0 0% 100%;
+
+  --palette-focus-ring: 28 88% 48%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --palette-motion-fast: 0ms;
+    --palette-motion-standard: 0ms;
+    --palette-motion-celebration: 0ms;
+  }
+}

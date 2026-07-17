@@ -1,0 +1,10 @@
+node_modules
+.next
+.turbo
+coverage
+test-results
+playwright-report
+pnpm-lock.yaml
+apps/app/public/sw.js
+apps/app/public/workbox-*.js
+docs/reference/*.json

@@ -1,0 +1,144 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { axe } from "jest-axe";
+import {
+  createMomentumDatabase,
+  createMomentumStorage,
+  type MomentumStorage,
+} from "@momentum/storage";
+import { StorageProvider } from "@/providers/storage-provider";
+import { useActiveSessionStore } from "@/stores/active-session-store";
+import { toDateOnly } from "./lib/streak";
+import { DashboardView } from "./DashboardView";
+
+let storage: MomentumStorage;
+
+function renderDashboard() {
+  return render(
+    <StorageProvider value={storage}>
+      <DashboardView />
+    </StorageProvider>,
+  );
+}
+
+/** Lets next/link's own post-mount effects (e.g. prefetch observers) settle. */
+function flush() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+describe("DashboardView", () => {
+  beforeEach(() => {
+    storage = createMomentumStorage(
+      createMomentumDatabase(`test-dashboard-view-${Math.random()}`),
+    );
+  });
+
+  afterEach(async () => {
+    await storage.db.delete();
+    useActiveSessionStore.setState({ activeSessionId: null });
+    localStorage.clear();
+  });
+
+  it("shows a loading skeleton before Dexie resolves", async () => {
+    renderDashboard();
+    // role="status" doesn't take its accessible *name* from content per the
+    // accname spec, but the live region's content is still announced —
+    // check for both independently.
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByText("Loading dashboard")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument(),
+    );
+  });
+
+  it("renders every dashboard.md section once real data has loaded", async () => {
+    renderDashboard();
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument(),
+    );
+
+    for (const title of [
+      "Streak",
+      "Today's Score",
+      "Today's One Thing",
+      "Checklist",
+      "Momentum",
+      "Weekly Snapshot",
+      "Roadmap",
+      "Latest Achievement",
+    ]) {
+      expect(screen.getByText(title)).toBeInTheDocument();
+    }
+    expect(
+      screen.getByRole("link", { name: "Start Practice" }),
+    ).toBeInTheDocument();
+  });
+
+  it("reflects a real streak and weekly snapshot written through the repository pattern", async () => {
+    const today = new Date();
+    for (let i = 0; i < 3; i += 1) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      await storage.statistics.upsertForDate({
+        date: toDateOnly(date),
+        practiceMinutes: 10,
+        sessionsCompleted: 1,
+      });
+    }
+
+    renderDashboard();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("streak-current")).toHaveTextContent("3"),
+    );
+    expect(screen.getByText("Longest: 3")).toBeInTheDocument();
+    expect(screen.getByTestId("weekly-minutes")).toHaveTextContent("30");
+    expect(screen.getByTestId("weekly-sessions")).toHaveTextContent("3");
+    await flush();
+  });
+
+  it("shows 'Continue Practice' and a real checklist for an active session", async () => {
+    const session = await storage.sessions.start(["breathing", "warmup"]);
+    await storage.sessions.updateProgress(session.id, { currentStepIndex: 1 });
+
+    renderDashboard();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("link", { name: "Continue Practice" }),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/Breathing/)).toHaveClass("line-through");
+    expect(screen.getByText(/Warm-up/)).not.toHaveClass("line-through");
+    await flush();
+  });
+
+  it("shows real roadmap progress once chapters are seeded", async () => {
+    await storage.roadmap.seed([
+      {
+        id: "chapter-1",
+        order: 1,
+        title: "Foundations",
+        status: "in_progress",
+        updatedAt: Date.now(),
+      },
+    ]);
+
+    renderDashboard();
+
+    await waitFor(() =>
+      expect(screen.getByText("Foundations")).toBeInTheDocument(),
+    );
+  });
+
+  it("has no accessibility violations once loaded", async () => {
+    const { container } = renderDashboard();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument(),
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+    await flush();
+  });
+});
