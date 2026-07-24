@@ -11,6 +11,8 @@ export const UserSchema = z.object({
   displayName: z.string().nullable(),
   age: z.number().int().positive().nullable(),
   activeSkillId: z.string().nullable(),
+  /** Set once the user finishes the onboarding flow — gates whether "/" or "/onboarding" is shown. */
+  onboardingCompletedAt: z.number().nullable(),
   createdAt: z.number(),
   updatedAt: z.number(),
 });

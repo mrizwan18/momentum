@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
 import {
@@ -10,6 +10,10 @@ import { StorageProvider } from "@/providers/storage-provider";
 import { useActiveSessionStore } from "@/stores/active-session-store";
 import { toDateOnly } from "./lib/streak";
 import { DashboardView } from "./DashboardView";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
 
 let storage: MomentumStorage;
 

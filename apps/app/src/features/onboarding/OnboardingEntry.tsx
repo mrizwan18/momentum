@@ -4,13 +4,14 @@ import dynamic from "next/dynamic";
 
 /**
  * Same ssr:false pattern as DashboardEntry/PracticeEntry — this flow is
- * entirely interactive (timers, step state, forms), no server render needed.
+ * entirely interactive (timers, step state, forms, onboarding-status via
+ * Dexie), no server render needed.
  */
-const OnboardingView = dynamic(
-  () => import("./OnboardingView").then((mod) => mod.OnboardingView),
-  { ssr: false },
-);
+const OnboardingGate = dynamic(() => import("./OnboardingGate"), {
+  ssr: false,
+});
 
+/** "/onboarding" redirects straight to "/" once onboarding is already finished, instead of restarting it. */
 export function OnboardingEntry() {
-  return <OnboardingView />;
+  return <OnboardingGate />;
 }

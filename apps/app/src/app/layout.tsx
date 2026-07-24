@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { AppProviders } from "@/providers";
+import { InstallPwaPrompt } from "@/components/InstallPwaPrompt";
 import { THEME_STORAGE_KEY } from "@/lib/theme-storage-key";
 import "@/styles/globals.css";
 
@@ -51,7 +52,10 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />
       </head>
       <body className="font-sans antialiased">
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          {children}
+          <InstallPwaPrompt />
+        </AppProviders>
       </body>
     </html>
   );

@@ -28,9 +28,12 @@
   --palette-text: 233 24% 14%;
   --palette-text-muted: 229 15% 55%;
 
-  /* brand.primary #4F5FE5 — the one accent color doing nearly all signaling */
-  --palette-primary: 233 74% 63%;
-  --palette-primary-foreground: 0 0% 100%;
+  /* brand.primary #F68D31 — matches the app icon's mark color (icon.svg).
+     Foreground is dark (not white): white-on-#F68D31 only hits ~2.4:1
+     contrast, so text sits in the same dark navy as the icon's background
+     instead, which also keeps the brand pairing intact. */
+  --palette-primary: 28 92% 58%;
+  --palette-primary-foreground: 233 24% 14%;
 
   /* status.streak/tintPurple family stand-in for a distinct "secondary" brand hue */
   --palette-secondary: 245 65% 68%;
@@ -45,7 +48,7 @@
   --palette-danger: 357 74% 58%;
   --palette-danger-foreground: 0 0% 100%;
 
-  --palette-focus-ring: 233 74% 63%;
+  --palette-focus-ring: 28 92% 58%;
 
   /* PIXEL_SPEC A3 surface tints — Hero/Analytics/Recommendation cards pick
      the tint that matches their semantic category, never decoratively. */
@@ -79,7 +82,7 @@
   --shape-shadow-card: 0 8px 24px 0 hsl(233 45% 16% / 0.06);
   --shape-shadow-hero: 0 12px 32px 0 hsl(233 45% 16% / 0.08);
   --shape-shadow-nav: 0 12px 32px -4px hsl(233 45% 16% / 0.1);
-  --shape-shadow-button-primary: 0 6px 16px 0 hsl(233 74% 63% / 0.3);
+  --shape-shadow-button-primary: 0 6px 16px 0 hsl(28 92% 58% / 0.3);
   --shape-shadow-icon-chip: 0 4px 8px 0 hsl(233 45% 16% / 0.04);
 
   --shape-motion-premium: cubic-bezier(0.16, 1, 0.3, 1);
@@ -96,8 +99,8 @@
   --palette-text: 230 25% 95%;
   --palette-text-muted: 228 12% 68%;
 
-  --palette-primary: 233 80% 72%;
-  --palette-primary-foreground: 233 40% 12%;
+  --palette-primary: 28 90% 66%;
+  --palette-primary-foreground: 28 40% 12%;
 
   --palette-secondary: 245 70% 75%;
   --palette-secondary-foreground: 245 40% 12%;
@@ -108,7 +111,7 @@
   --palette-danger: 357 75% 65%;
   --palette-danger-foreground: 0 0% 100%;
 
-  --palette-focus-ring: 233 80% 72%;
+  --palette-focus-ring: 28 90% 66%;
 
   --palette-tint-blue: 233 25% 18%;
   --palette-tint-peach: 33 35% 20%;
@@ -123,7 +126,7 @@
   --shape-shadow-card: 0 8px 24px 0 hsl(0 0% 0% / 0.35);
   --shape-shadow-hero: 0 12px 32px 0 hsl(0 0% 0% / 0.45);
   --shape-shadow-nav: 0 12px 32px -4px hsl(0 0% 0% / 0.5);
-  --shape-shadow-button-primary: 0 6px 16px 0 hsl(233 80% 72% / 0.35);
+  --shape-shadow-button-primary: 0 6px 16px 0 hsl(28 90% 66% / 0.35);
   --shape-shadow-icon-chip: 0 4px 8px 0 hsl(0 0% 0% / 0.25);
 }
 

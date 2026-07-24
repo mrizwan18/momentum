@@ -10,6 +10,7 @@ export function createUser(
     displayName?: string | null;
     age?: number | null;
     activeSkillId?: string | null;
+    onboardingCompletedAt?: number | null;
   } = {},
 ): UserRecord {
   const now = Date.now();
@@ -18,6 +19,7 @@ export function createUser(
     displayName: input.displayName ?? null,
     age: input.age ?? null,
     activeSkillId: input.activeSkillId ?? null,
+    onboardingCompletedAt: input.onboardingCompletedAt ?? null,
     createdAt: now,
     updatedAt: now,
   });

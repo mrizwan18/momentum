@@ -114,7 +114,15 @@ export function OnboardingView() {
         <AnalyzingScreen onBack={back} onComplete={next} />
       ) : null}
       {step === "result" ? (
-        <InitialAssessmentScreen onBack={back} onNext={next} />
+        <InitialAssessmentScreen
+          onBack={back}
+          onNext={() => {
+            // Marks onboarding finished before the final `next()` navigates
+            // to "/" — the Dashboard's own gate checks this same flag, so
+            // it must be durable before that redirect lands.
+            storage.users.completeOnboarding().finally(next);
+          }}
+        />
       ) : null}
     </Crossfade>
   );

@@ -187,6 +187,35 @@ export class MomentumDatabase extends Dexie {
             recording.title ??= null;
           });
       });
+
+    // Onboarding completion gate: "/" redirects to "/onboarding" until this is set.
+    this.version(6)
+      .stores({
+        settings: "id",
+        sessions: "id, status, startedAt, skillId, planId",
+        recordings: "id, sessionId, createdAt, exerciseAttemptId",
+        statistics: "id, date",
+        roadmap: "id, order, status",
+        users: "id",
+        skills: "id, slug, isActive",
+        exercises: "id, skillId, category, order",
+        practicePlans: "id, skillId, isRecoveryPlan",
+        exerciseAttempts: "id, sessionId, exerciseId, status, createdAt",
+        sessionSummaries: "id, sessionId",
+        streaks: "id, skillId",
+        achievements: "id, key, status",
+        milestones: "id, type, achieved",
+        dailyGoals: "id, date, completed",
+        recommendations: "id, category, priority, createdAt",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("users")
+          .toCollection()
+          .modify((user) => {
+            user.onboardingCompletedAt ??= null;
+          });
+      });
   }
 }
 

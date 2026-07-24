@@ -6,18 +6,20 @@ import {
   type MomentumStorage,
 } from "@momentum/storage";
 import { StorageProvider } from "@/providers/storage-provider";
-import Home from "./page";
+import { DashboardEntry } from "./DashboardEntry";
 
+const replace = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ replace }),
 }));
 
 let storage: MomentumStorage;
 
-describe("Home", () => {
+describe("DashboardEntry", () => {
   beforeEach(() => {
+    replace.mockClear();
     storage = createMomentumStorage(
-      createMomentumDatabase(`test-home-page-${Math.random()}`),
+      createMomentumDatabase(`test-dashboard-entry-${Math.random()}`),
     );
   });
 
@@ -25,12 +27,22 @@ describe("Home", () => {
     await storage.db.delete();
   });
 
-  it("renders the Dashboard behind the real app providers once onboarding is complete", async () => {
+  it("redirects to /onboarding when onboarding hasn't been completed", async () => {
+    render(
+      <StorageProvider value={storage}>
+        <DashboardEntry />
+      </StorageProvider>,
+    );
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
+  });
+
+  it("renders the Dashboard without redirecting once onboarding is completed", async () => {
     await storage.users.completeOnboarding();
 
     render(
       <StorageProvider value={storage}>
-        <Home />
+        <DashboardEntry />
       </StorageProvider>,
     );
 
@@ -39,8 +51,6 @@ describe("Home", () => {
         expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument(),
       { timeout: 5000 },
     );
-    expect(
-      screen.getByRole("button", { name: "Go to practice" }),
-    ).toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalled();
   });
 });

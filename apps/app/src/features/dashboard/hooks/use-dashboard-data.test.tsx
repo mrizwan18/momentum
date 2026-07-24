@@ -7,6 +7,7 @@ import {
 } from "@momentum/storage";
 import { StorageProvider } from "@/providers/storage-provider";
 import { useActiveSessionStore } from "@/stores/active-session-store";
+import { toDateOnly } from "../lib/streak";
 import { useDashboardData } from "./use-dashboard-data";
 
 let storage: MomentumStorage;
@@ -49,7 +50,7 @@ describe("useDashboardData", () => {
   });
 
   it("reflects real statistics written through the repository pattern", async () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateOnly(new Date());
     await storage.statistics.upsertForDate({
       date: today,
       practiceMinutes: 15,

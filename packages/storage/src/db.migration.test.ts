@@ -237,3 +237,55 @@ describe("MomentumDatabase v4 -> v5 migration", () => {
     upgraded.close();
   });
 });
+
+describe("MomentumDatabase v5 -> v6 migration", () => {
+  const dbName = `test-migration-v5-${Math.random()}`;
+
+  afterEach(async () => {
+    await Dexie.delete(dbName);
+  });
+
+  it("backfills onboardingCompletedAt on users predating the onboarding gate", async () => {
+    const legacy = new Dexie(dbName);
+    legacy.version(5).stores({
+      settings: "id",
+      sessions: "id, status, startedAt, skillId, planId",
+      recordings: "id, sessionId, createdAt, exerciseAttemptId",
+      statistics: "id, date",
+      roadmap: "id, order, status",
+      users: "id",
+      skills: "id, slug, isActive",
+      exercises: "id, skillId, category, order",
+      practicePlans: "id, skillId, isRecoveryPlan",
+      exerciseAttempts: "id, sessionId, exerciseId, status, createdAt",
+      sessionSummaries: "id, sessionId",
+      streaks: "id, skillId",
+      achievements: "id, key, status",
+      milestones: "id, type, achieved",
+      dailyGoals: "id, date, completed",
+      recommendations: "id, category, priority, createdAt",
+    });
+    await legacy.open();
+    await legacy.table("users").add({
+      id: "local",
+      displayName: "Rizwan",
+      age: 24,
+      activeSkillId: null,
+      createdAt: 1000,
+      updatedAt: 1000,
+    });
+    legacy.close();
+
+    const upgraded = new MomentumDatabase(dbName);
+    await upgraded.open();
+
+    const user = await upgraded.users.get("local");
+    expect(user).toBeDefined();
+    expect(user?.onboardingCompletedAt).toBeNull();
+    // v5 fields must survive untouched.
+    expect(user?.displayName).toBe("Rizwan");
+    expect(user?.age).toBe(24);
+
+    upgraded.close();
+  });
+});

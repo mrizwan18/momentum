@@ -45,4 +45,22 @@ describe("user repository", () => {
     expect(user.displayName).toBe("Rizwan");
     expect(await db.users.count()).toBe(1);
   });
+
+  it("marks onboarding complete with a real timestamp", async () => {
+    const repo = createUserRepository(db);
+    const before = Date.now();
+    const user = await repo.completeOnboarding();
+
+    expect(user.onboardingCompletedAt).not.toBeNull();
+    expect(user.onboardingCompletedAt as number).toBeGreaterThanOrEqual(before);
+  });
+
+  it("keeps the first completion timestamp on repeat calls", async () => {
+    const repo = createUserRepository(db);
+    const first = await repo.completeOnboarding();
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    const second = await repo.completeOnboarding();
+
+    expect(second.onboardingCompletedAt).toBe(first.onboardingCompletedAt);
+  });
 });

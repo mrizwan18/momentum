@@ -12,6 +12,8 @@ export interface UserRepository {
   setDisplayName(displayName: string | null): Promise<UserRecord>;
   setAge(age: number | null): Promise<UserRecord>;
   setActiveSkill(skillId: string | null): Promise<UserRecord>;
+  /** Marks the onboarding flow as finished — idempotent, keeps the first completion timestamp. */
+  completeOnboarding(): Promise<UserRecord>;
 }
 
 export function createUserRepository(db: MomentumDatabase): UserRepository {
@@ -44,6 +46,14 @@ export function createUserRepository(db: MomentumDatabase): UserRepository {
 
     async setActiveSkill(skillId) {
       return upsert({ activeSkillId: skillId });
+    },
+
+    async completeOnboarding() {
+      const existing = await db.users.get(USER_SINGLETON_ID);
+      if (existing?.onboardingCompletedAt) {
+        return existing;
+      }
+      return upsert({ onboardingCompletedAt: Date.now() });
     },
   };
 }
