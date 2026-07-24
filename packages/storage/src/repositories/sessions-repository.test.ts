@@ -51,4 +51,21 @@ describe("sessions repository", () => {
     const repo = createSessionsRepository(db);
     await expect(repo.pause("missing-id")).rejects.toThrow(/was not found/);
   });
+
+  it("lists only completed sessions, oldest first", async () => {
+    const repo = createSessionsRepository(db);
+    const first = await repo.start(["breathing"]);
+    await repo.complete(first.id);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    const second = await repo.start(["warmup"]);
+    await repo.complete(second.id);
+    const abandoned = await repo.start(["scales"]);
+    await repo.abandon(abandoned.id);
+
+    const completed = await repo.listCompleted();
+    expect(completed.map((session) => session.id)).toEqual([
+      first.id,
+      second.id,
+    ]);
+  });
 });

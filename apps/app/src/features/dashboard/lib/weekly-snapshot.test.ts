@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { StatisticsEntryRecord } from "@momentum/types";
-import { computeWeeklySnapshot } from "./weekly-snapshot";
+import { computeWeeklyByDay } from "./weekly-snapshot";
 import { toDateOnly } from "./streak";
 
 const TODAY = new Date(2026, 6, 17);
@@ -23,34 +23,24 @@ function entry(
   };
 }
 
-describe("computeWeeklySnapshot", () => {
-  it("returns zeroes when there are no statistics", () => {
-    const result = computeWeeklySnapshot([], TODAY);
-    expect(result).toEqual({
-      practiceMinutes: 0,
-      sessionsCompleted: 0,
-      daysPracticed: 0,
-    });
+describe("computeWeeklyByDay", () => {
+  it("returns exactly 7 days, oldest first, ending on today", () => {
+    const result = computeWeeklyByDay([], TODAY);
+    expect(result).toHaveLength(7);
+    expect(result[6].isToday).toBe(true);
+    expect(result.slice(0, 6).every((day) => !day.isToday)).toBe(true);
   });
 
-  it("sums practice minutes and sessions within the trailing 7 days", () => {
-    const entries = [entry(0, 10, 1), entry(1, 20, 1), entry(6, 5, 1)];
-    const result = computeWeeklySnapshot(entries, TODAY);
-    expect(result.practiceMinutes).toBe(35);
-    expect(result.sessionsCompleted).toBe(3);
-    expect(result.daysPracticed).toBe(3);
+  it("pulls real minutes from statistics, defaulting missing days to 0", () => {
+    const entries = [entry(0, 12, 1), entry(2, 30, 2)];
+    const result = computeWeeklyByDay(entries, TODAY);
+    expect(result[6].minutes).toBe(12);
+    expect(result[4].minutes).toBe(30);
+    expect(result[0].minutes).toBe(0);
   });
 
-  it("excludes entries older than 7 days", () => {
-    const entries = [entry(0, 10, 1), entry(7, 100, 5), entry(30, 100, 5)];
-    const result = computeWeeklySnapshot(entries, TODAY);
-    expect(result.practiceMinutes).toBe(10);
-    expect(result.sessionsCompleted).toBe(1);
-  });
-
-  it("does not count zero-activity entries as practiced days", () => {
-    const entries = [entry(0, 0, 0)];
-    const result = computeWeeklySnapshot(entries, TODAY);
-    expect(result.daysPracticed).toBe(0);
+  it("uses single-letter day-of-week labels", () => {
+    const result = computeWeeklyByDay([], TODAY);
+    result.forEach((day) => expect(day.label).toMatch(/^[SMTWF]$/));
   });
 });

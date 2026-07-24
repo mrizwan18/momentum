@@ -58,24 +58,15 @@ describe("DashboardView", () => {
       expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument(),
     );
 
-    for (const title of [
-      "Streak",
-      "Today's Score",
-      "Today's One Thing",
-      "Checklist",
-      "Momentum",
-      "Weekly Snapshot",
-      "Roadmap",
-      "Latest Achievement",
-    ]) {
+    for (const title of ["Current Streak", "Quick Practice"]) {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
     expect(
-      screen.getByRole("link", { name: "Start Practice" }),
+      screen.getByRole("button", { name: "Go to practice" }),
     ).toBeInTheDocument();
   });
 
-  it("reflects a real streak and weekly snapshot written through the repository pattern", async () => {
+  it("reflects a real streak written through the repository pattern", async () => {
     const today = new Date();
     for (let i = 0; i < 3; i += 1) {
       const date = new Date(today);
@@ -93,43 +84,7 @@ describe("DashboardView", () => {
       expect(screen.getByTestId("streak-current")).toHaveTextContent("3"),
     );
     expect(screen.getByText("Longest: 3")).toBeInTheDocument();
-    expect(screen.getByTestId("weekly-minutes")).toHaveTextContent("30");
-    expect(screen.getByTestId("weekly-sessions")).toHaveTextContent("3");
     await flush();
-  });
-
-  it("shows 'Continue Practice' and a real checklist for an active session", async () => {
-    const session = await storage.sessions.start(["breathing", "warmup"]);
-    await storage.sessions.updateProgress(session.id, { currentStepIndex: 1 });
-
-    renderDashboard();
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("link", { name: "Continue Practice" }),
-      ).toBeInTheDocument(),
-    );
-    expect(screen.getByText(/Breathing/)).toHaveClass("line-through");
-    expect(screen.getByText(/Warm-up/)).not.toHaveClass("line-through");
-    await flush();
-  });
-
-  it("shows real roadmap progress once chapters are seeded", async () => {
-    await storage.roadmap.seed([
-      {
-        id: "chapter-1",
-        order: 1,
-        title: "Foundations",
-        status: "in_progress",
-        updatedAt: Date.now(),
-      },
-    ]);
-
-    renderDashboard();
-
-    await waitFor(() =>
-      expect(screen.getByText("Foundations")).toBeInTheDocument(),
-    );
   });
 
   it("has no accessibility violations once loaded", async () => {

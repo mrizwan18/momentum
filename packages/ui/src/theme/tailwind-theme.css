@@ -26,13 +26,40 @@
 
   --color-ring: hsl(var(--palette-focus-ring));
 
+  /* PIXEL_SPEC A3 surface tints, for HeroCard/AnalyticsCard/RecommendationCard. */
+  --color-tint-blue: hsl(var(--palette-tint-blue));
+  --color-tint-peach: hsl(var(--palette-tint-peach));
+  --color-tint-pink: hsl(var(--palette-tint-pink));
+  --color-tint-green: hsl(var(--palette-tint-green));
+  --color-tint-purple: hsl(var(--palette-tint-purple));
+
+  /* PIXEL_SPEC A3 chart colors, for BarChart/Waveform. */
+  --color-chart-active: hsl(var(--palette-chart-active));
+  --color-chart-inactive: hsl(var(--palette-chart-inactive));
+  --color-chart-track: hsl(var(--palette-chart-track));
+
   --transition-duration-fast: var(--palette-motion-fast);
   --transition-duration-standard: var(--palette-motion-standard);
   --transition-duration-celebration: var(--palette-motion-celebration);
   --ease-momentum: var(--palette-motion-ease);
+  --ease-premium: var(--shape-motion-premium);
 
   --min-height-touch: var(--palette-touch-target-min);
   --min-width-touch: var(--palette-touch-target-min);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-app), ui-sans-serif, system-ui, sans-serif;
+
+  /* One shared radius/elevation scale for every component, so "how
+     important is this" is a token change, not a per-component guess.
+     Values match docs/design/PIXEL_SPEC.md A5/A6. */
+  --radius-control: var(--shape-radius-control);
+  --radius-pill: var(--shape-radius-pill);
+  --radius-card: var(--shape-radius-card);
+  --radius-hero: var(--shape-radius-hero);
+  --radius-chip: var(--shape-radius-chip);
+  --shadow-card: var(--shape-shadow-card);
+  --shadow-hero: var(--shape-shadow-hero);
+  --shadow-nav: var(--shape-shadow-nav);
+  --shadow-button-primary: var(--shape-shadow-button-primary);
+  --shadow-icon-chip: var(--shape-shadow-icon-chip);
 }

@@ -26,6 +26,7 @@ export default defineConfig({
       "@momentum/storage": path.resolve(__dirname, "./packages/storage/src"),
       "@momentum/types": path.resolve(__dirname, "./packages/types/src"),
       "@momentum/utils": path.resolve(__dirname, "./packages/utils/src"),
+      "@test-utils": path.resolve(__dirname, "./tests"),
     },
   },
 });

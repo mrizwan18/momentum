@@ -1,3 +1,7 @@
+import { toDateOnly } from "@/lib/date";
+
+export { toDateOnly };
+
 const MILESTONES = [7, 14, 30, 60, 100, 180, 365];
 
 export interface StreakSummary {
@@ -10,13 +14,6 @@ export interface StreakSummary {
 
 export type PracticeStatus =
   "new" | "practiced-today" | "streak-active" | "recovery";
-
-export function toDateOnly(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function parseDateOnly(value: string): Date {
   const [year, month, day] = value.split("-").map(Number);

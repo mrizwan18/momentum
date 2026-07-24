@@ -1,3 +1,4 @@
+import "./blob-polyfill";
 import "fake-indexeddb/auto";
 import "@testing-library/jest-dom/vitest";
 import { expect } from "vitest";
@@ -15,4 +16,20 @@ if (!Element.prototype.setPointerCapture) {
 }
 if (!Element.prototype.releasePointerCapture) {
   Element.prototype.releasePointerCapture = () => {};
+}
+
+// jsdom doesn't implement Object URLs at all. A simple in-memory registry is
+// enough for tests — nothing here needs the URL to actually resolve over the
+// network, just to exist and be revocable (e.g. recording playback previews).
+if (!URL.createObjectURL) {
+  const registry = new Map<string, Blob>();
+  let nextId = 0;
+  URL.createObjectURL = (blob: Blob) => {
+    const url = `blob:mock/${nextId++}`;
+    registry.set(url, blob);
+    return url;
+  };
+  URL.revokeObjectURL = (url: string) => {
+    registry.delete(url);
+  };
 }

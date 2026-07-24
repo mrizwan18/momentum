@@ -3,9 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { Greeting } from "./Greeting";
 
 describe("Greeting", () => {
-  it("shows a time-of-day heading and a status-appropriate subtitle", () => {
+  it("shows a status-appropriate subtitle", () => {
     render(<Greeting status="streak-active" />);
-    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/keep your streak alive/i)).toBeInTheDocument();
   });
 

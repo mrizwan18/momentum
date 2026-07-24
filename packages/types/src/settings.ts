@@ -1,4 +1,5 @@
-import type { ThemePreference } from "./theme";
+import { z } from "zod";
+import { THEME_PREFERENCES } from "./theme";
 
 /**
  * Singleton row: Dexie is keyed on `id`, and the app only ever reads/writes
@@ -6,9 +7,11 @@ import type { ThemePreference } from "./theme";
  */
 export const SETTINGS_SINGLETON_ID = "app";
 
-export interface SettingsRecord {
-  id: typeof SETTINGS_SINGLETON_ID;
-  theme: ThemePreference;
-  createdAt: number;
-  updatedAt: number;
-}
+export const SettingsSchema = z.object({
+  id: z.literal(SETTINGS_SINGLETON_ID),
+  theme: z.enum(THEME_PREFERENCES),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+export type SettingsRecord = z.infer<typeof SettingsSchema>;

@@ -6,7 +6,7 @@ import { useThemeStore } from "../stores/theme-store";
 describe("ThemeProvider", () => {
   afterEach(() => {
     act(() => {
-      useThemeStore.setState({ theme: "dark" });
+      useThemeStore.setState({ theme: "light" });
     });
     document.documentElement.removeAttribute("data-theme");
     localStorage.clear();
@@ -18,7 +18,7 @@ describe("ThemeProvider", () => {
         <div>content</div>
       </ThemeProvider>,
     );
-    expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("light");
   });
 
   it("re-applies when the store theme changes", () => {
@@ -29,9 +29,9 @@ describe("ThemeProvider", () => {
     );
 
     act(() => {
-      useThemeStore.getState().setTheme("light");
+      useThemeStore.getState().setTheme("dark");
     });
 
-    expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
   });
 });

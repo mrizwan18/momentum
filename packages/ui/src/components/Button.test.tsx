@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { Button } from "./Button";
@@ -29,7 +29,12 @@ describe("Button", () => {
     const button = screen.getByRole("button");
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
-    await userEvent.click(button);
+    // Real inline `pointer-events: none` now applies (see Button.tsx's
+    // comment on the Tailwind compilation defect), so a realistic
+    // userEvent.click correctly refuses to interact with it at all —
+    // fireEvent dispatches the DOM event directly to confirm the
+    // browser's native `disabled` semantics still block the handler.
+    fireEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
   });
 
@@ -51,6 +56,6 @@ describe("Button", () => {
 
   it("stays a fixed square with the icon size", () => {
     render(<Button size="icon">*</Button>);
-    expect(screen.getByRole("button")).toHaveClass("px-0");
+    expect(screen.getByRole("button")).toHaveStyle({ paddingLeft: "0px" });
   });
 });

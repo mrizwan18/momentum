@@ -36,4 +36,19 @@ describe("Input", () => {
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
+
+  it("renders a decorative leading icon", () => {
+    render(
+      <Input
+        leadingIcon={<span data-testid="leading-icon" />}
+        placeholder="Enter your name"
+      />,
+    );
+    expect(screen.getByTestId("leading-icon")).toBeInTheDocument();
+  });
+
+  it("renders trailing text", () => {
+    render(<Input trailingText="Years" placeholder="Enter your age" />);
+    expect(screen.getByText("Years")).toBeInTheDocument();
+  });
 });

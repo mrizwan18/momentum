@@ -7,12 +7,34 @@ import { VisuallyHidden } from "./VisuallyHidden";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   loading?: boolean;
+  /** Decorative icon rendered inside the field's leading edge (e.g. a person glyph for a name field). */
+  leadingIcon?: React.ReactNode;
+  /** Static text rendered inside the field's trailing edge (e.g. a unit like "Years"). */
+  trailingText?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, loading = false, disabled, ...props }, ref) => {
+  (
+    {
+      className,
+      loading = false,
+      disabled,
+      leadingIcon,
+      trailingText,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <div className="relative w-full">
+        {leadingIcon ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-foreground-muted"
+          >
+            {leadingIcon}
+          </span>
+        ) : null}
         <input
           ref={ref}
           aria-busy={loading || undefined}
@@ -25,7 +47,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             "focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "aria-[invalid=true]:border-danger",
-            loading && "pr-9",
+            leadingIcon && "pl-9",
+            (loading || trailingText) && "pr-9",
             className,
           )}
           {...props}
@@ -38,6 +61,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             />
             <VisuallyHidden>Loading</VisuallyHidden>
           </>
+        ) : trailingText ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-foreground-muted"
+          >
+            {trailingText}
+          </span>
         ) : null}
       </div>
     );

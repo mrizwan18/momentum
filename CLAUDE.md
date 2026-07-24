@@ -126,6 +126,16 @@ Then wait for approval.
 
 ---
 
+## Visual Regression Rule
+
+Every major screen must have:
+
+- A reference PNG stored in `/design/reference`.
+- An implementation screenshot captured at the same viewport.
+- A manual visual comparison before the feature is considered complete.
+
+A UI task is not done until the implementation is visually reviewed against its reference.
+
 # Final Principle
 
 Optimize for craftsmanship over speed.

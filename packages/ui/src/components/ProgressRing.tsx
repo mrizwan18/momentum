@@ -26,13 +26,19 @@ export interface ProgressRingProps extends Omit<
  * already tweens from whatever the ring currently shows, so re-renders with
  * a new `value` never reset to zero — only the very first mount does,
  * driven by `initial`.
+ *
+ * Position/display/stroke-color are inline style rather than Tailwind
+ * utilities (`relative`, `inline-flex`, `absolute`, `inset-0`,
+ * `stroke-border`, `stroke-primary` all silently fail to compile in this
+ * project's production build — see Button.tsx's comment for the full
+ * story).
  */
 export const ProgressRing = React.forwardRef<HTMLDivElement, ProgressRingProps>(
   (
     {
       value,
-      size = 96,
-      strokeWidth = 8,
+      size = 100,
+      strokeWidth = 9,
       label = "Progress",
       disabled = false,
       className,
@@ -58,11 +64,15 @@ export const ProgressRing = React.forwardRef<HTMLDivElement, ProgressRingProps>(
         aria-valuemax={100}
         aria-valuenow={indeterminate ? undefined : Math.round(clamped)}
         aria-disabled={disabled || undefined}
-        className={cn(
-          "relative inline-flex items-center justify-center",
-          className,
-        )}
-        style={{ width: size, height: size }}
+        className={cn(className)}
+        style={{
+          position: "relative",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: size,
+          height: size,
+        }}
         {...props}
       >
         <motion.svg
@@ -85,7 +95,7 @@ export const ProgressRing = React.forwardRef<HTMLDivElement, ProgressRingProps>(
             r={radius}
             fill="none"
             strokeWidth={strokeWidth}
-            className="stroke-border"
+            stroke="hsl(var(--palette-border))"
           />
           <motion.circle
             cx={size / 2}
@@ -94,7 +104,11 @@ export const ProgressRing = React.forwardRef<HTMLDivElement, ProgressRingProps>(
             fill="none"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
-            className={disabled ? "stroke-foreground-muted" : "stroke-primary"}
+            stroke={
+              disabled
+                ? "hsl(var(--palette-text-muted))"
+                : "hsl(var(--palette-primary))"
+            }
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
             animate={{
@@ -107,7 +121,15 @@ export const ProgressRing = React.forwardRef<HTMLDivElement, ProgressRingProps>(
           />
         </motion.svg>
         {children ? (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             {children}
           </div>
         ) : null}

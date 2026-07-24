@@ -1,71 +1,130 @@
 /**
- * Momentum design tokens (docs/design/design-language.md).
+ * Momentum design tokens — rebuilt to match docs/design/PIXEL_SPEC.md
+ * (reverse-engineered from docs/design/references/*.png).
  * HSL triplets (no hsl() wrapper) so Tailwind can apply alpha via
  * hsl(var(--palette-x) / <alpha-value>).
  *
- * Dark is the default theme; [data-theme="light"] overrides it.
+ * PIXEL_SPEC only specifies a light theme — light below is the direct
+ * match; dark is a faithful same-brand adaptation (component-system.md
+ * requires every component to work in both), not itself pixel-specced.
+ * Light is now the default theme (apply-theme.ts always stamps an
+ * explicit data-theme attribute, but the bare :root fallback below
+ * matches it too, for the instant before that runs).
  */
-:root {
-  color-scheme: dark;
-
-  --palette-bg: 222 20% 8%;
-  --palette-surface: 222 17% 12%;
-  --palette-surface-raised: 222 15% 16%;
-  --palette-border: 222 12% 22%;
-
-  --palette-text: 40 20% 96%;
-  --palette-text-muted: 220 10% 65%;
-
-  /* Warm orange: achievement, progress, action */
-  --palette-primary: 28 92% 58%;
-  --palette-primary-foreground: 24 40% 10%;
-
-  /* Muted teal: guidance, coaching, learning */
-  --palette-secondary: 187 45% 45%;
-  --palette-secondary-foreground: 187 60% 96%;
-
-  /* Green: completion only */
-  --palette-success: 152 55% 45%;
-  --palette-success-foreground: 152 60% 10%;
-
-  /* Red: reserved for destructive actions only, never for "poor performance" */
-  --palette-danger: 4 72% 55%;
-  --palette-danger-foreground: 0 0% 100%;
-
-  --palette-focus-ring: 28 92% 58%;
-
-  --palette-motion-fast: 150ms;
-  --palette-motion-standard: 250ms;
-  --palette-motion-celebration: 500ms;
-  --palette-motion-ease: cubic-bezier(0, 0, 0.2, 1);
-
-  --palette-touch-target-min: 44px;
-}
-
+:root,
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --palette-bg: 40 33% 98%;
+  /* PIXEL_SPEC A3 color.bg.base #EEF1FB / surface.card #FFFFFF */
+  --palette-bg: 230 45% 97%;
   --palette-surface: 0 0% 100%;
-  --palette-surface-raised: 40 20% 97%;
-  --palette-border: 220 14% 88%;
+  --palette-surface-raised: 228 45% 95%;
+  /* Cards are borderless in PIXEL_SPEC (separation via shadow only) —
+     border stays near-invisible against surface, not fully removed, so
+     it still does its job for dividers/inputs/focus states. */
+  --palette-border: 228 30% 91%;
 
-  --palette-text: 222 30% 12%;
-  --palette-text-muted: 220 10% 40%;
+  /* text.primary #181A2E / text.secondary #7D82A0 */
+  --palette-text: 233 24% 14%;
+  --palette-text-muted: 229 15% 55%;
 
-  --palette-primary: 28 88% 48%;
+  /* brand.primary #4F5FE5 — the one accent color doing nearly all signaling */
+  --palette-primary: 233 74% 63%;
   --palette-primary-foreground: 0 0% 100%;
 
-  --palette-secondary: 187 50% 32%;
+  /* status.streak/tintPurple family stand-in for a distinct "secondary" brand hue */
+  --palette-secondary: 245 65% 68%;
   --palette-secondary-foreground: 0 0% 100%;
 
-  --palette-success: 152 45% 32%;
+  /* status.success #31C46B */
+  --palette-success: 146 61% 47%;
   --palette-success-foreground: 0 0% 100%;
 
-  --palette-danger: 4 70% 45%;
+  /* Not in PIXEL_SPEC (no destructive actions shown) — kept in the same
+     saturation family, reserved for destructive actions only. */
+  --palette-danger: 357 74% 58%;
   --palette-danger-foreground: 0 0% 100%;
 
-  --palette-focus-ring: 28 88% 48%;
+  --palette-focus-ring: 233 74% 63%;
+
+  /* PIXEL_SPEC A3 surface tints — Hero/Analytics/Recommendation cards pick
+     the tint that matches their semantic category, never decoratively. */
+  --palette-tint-blue: 228 68% 92%;
+  --palette-tint-peach: 33 89% 90%;
+  --palette-tint-pink: 357 71% 92%;
+  --palette-tint-green: 138 45% 91%;
+  --palette-tint-purple: 248 68% 93%;
+
+  /* PIXEL_SPEC A3 chart colors */
+  --palette-chart-active: 233 74% 63%;
+  --palette-chart-inactive: 230 68% 85%;
+  --palette-chart-track: 228 55% 90%;
+
+  /* PIXEL_SPEC A7 motion tokens */
+  --palette-motion-fast: 150ms;
+  --palette-motion-standard: 300ms;
+  --palette-motion-celebration: 600ms;
+  --palette-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --palette-touch-target-min: 44px;
+
+  /* PIXEL_SPEC A5 radius scale */
+  --shape-radius-control: 1rem;
+  --shape-radius-pill: 999px;
+  --shape-radius-card: 1.375rem;
+  --shape-radius-hero: 1.75rem;
+  --shape-radius-chip: 0.9375rem;
+
+  /* PIXEL_SPEC A6 shadow scale */
+  --shape-shadow-card: 0 8px 24px 0 hsl(233 45% 16% / 0.06);
+  --shape-shadow-hero: 0 12px 32px 0 hsl(233 45% 16% / 0.08);
+  --shape-shadow-nav: 0 12px 32px -4px hsl(233 45% 16% / 0.1);
+  --shape-shadow-button-primary: 0 6px 16px 0 hsl(233 74% 63% / 0.3);
+  --shape-shadow-icon-chip: 0 4px 8px 0 hsl(233 45% 16% / 0.04);
+
+  --shape-motion-premium: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --palette-bg: 233 28% 8%;
+  --palette-surface: 233 22% 12%;
+  --palette-surface-raised: 233 20% 16%;
+  --palette-border: 233 16% 24%;
+
+  --palette-text: 230 25% 95%;
+  --palette-text-muted: 228 12% 68%;
+
+  --palette-primary: 233 80% 72%;
+  --palette-primary-foreground: 233 40% 12%;
+
+  --palette-secondary: 245 70% 75%;
+  --palette-secondary-foreground: 245 40% 12%;
+
+  --palette-success: 146 55% 55%;
+  --palette-success-foreground: 146 40% 10%;
+
+  --palette-danger: 357 75% 65%;
+  --palette-danger-foreground: 0 0% 100%;
+
+  --palette-focus-ring: 233 80% 72%;
+
+  --palette-tint-blue: 233 25% 18%;
+  --palette-tint-peach: 33 35% 20%;
+  --palette-tint-pink: 357 30% 20%;
+  --palette-tint-green: 138 25% 18%;
+  --palette-tint-purple: 248 30% 22%;
+
+  --palette-chart-active: 233 80% 72%;
+  --palette-chart-inactive: 233 25% 28%;
+  --palette-chart-track: 233 20% 22%;
+
+  --shape-shadow-card: 0 8px 24px 0 hsl(0 0% 0% / 0.35);
+  --shape-shadow-hero: 0 12px 32px 0 hsl(0 0% 0% / 0.45);
+  --shape-shadow-nav: 0 12px 32px -4px hsl(0 0% 0% / 0.5);
+  --shape-shadow-button-primary: 0 6px 16px 0 hsl(233 80% 72% / 0.35);
+  --shape-shadow-icon-chip: 0 4px 8px 0 hsl(0 0% 0% / 0.25);
 }
 
 @media (prefers-reduced-motion: reduce) {

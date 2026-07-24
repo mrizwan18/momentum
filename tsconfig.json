@@ -13,7 +13,8 @@
       "@momentum/types": ["./packages/types/src"],
       "@momentum/types/*": ["./packages/types/src/*"],
       "@momentum/utils": ["./packages/utils/src"],
-      "@momentum/utils/*": ["./packages/utils/src/*"]
+      "@momentum/utils/*": ["./packages/utils/src/*"],
+      "@test-utils/*": ["./tests/*"]
     }
   },
   "include": ["tests/**/*.ts"],

@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "../lib/cn";
 import { Button, type ButtonProps } from "./Button";
 import { Heading, Text } from "./Typography";
+import { Reveal } from "./Reveal";
 import { Stack } from "./Stack";
 
 /**
@@ -34,15 +35,18 @@ export function StatusState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-dashed border-border p-8 text-center",
+        "flex flex-col items-center gap-4 rounded-hero bg-surface-raised px-8 py-12 text-center",
         className,
       )}
       {...props}
     >
       {icon ? (
-        <div aria-hidden="true" className="text-foreground-muted">
+        <Reveal
+          variant="scale"
+          className="rounded-full bg-surface p-5 text-foreground-muted"
+        >
           {icon}
-        </div>
+        </Reveal>
       ) : null}
       <Stack gap="xs">
         <Heading as="h2" size="md">

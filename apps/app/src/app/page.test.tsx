@@ -11,7 +11,7 @@ describe("Home", () => {
       expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument(),
     );
     expect(
-      screen.getByRole("link", { name: "Start Practice" }),
+      screen.getByRole("button", { name: "Go to practice" }),
     ).toBeInTheDocument();
   });
 });

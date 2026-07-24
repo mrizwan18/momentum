@@ -1,21 +1,42 @@
-import { generateId } from "@momentum/utils";
-import type {
-  PracticeSessionRecord,
-  PracticeSessionStatus,
+import {
+  PracticeSessionSchema,
+  type PracticeSessionRecord,
+  type PracticeSessionStatus,
+  type VoiceCondition,
 } from "@momentum/types";
 import type { MomentumDatabase } from "../db";
+import { parseOrThrow } from "../validation";
+import {
+  createPracticeSession,
+  type CreatePracticeSessionInput,
+} from "../factories/session-factory";
 
 export interface SessionProgressPatch {
   currentStepIndex?: number;
   elapsedSeconds?: number;
+  draftNotes?: string | null;
 }
 
+export type StartSessionOptions = Omit<
+  CreatePracticeSessionInput,
+  "exerciseIds"
+>;
+
 export interface SessionsRepository {
-  start(exerciseIds: string[]): Promise<PracticeSessionRecord>;
+  start(
+    exerciseIds: string[],
+    options?: StartSessionOptions,
+  ): Promise<PracticeSessionRecord>;
   getActive(): Promise<PracticeSessionRecord | undefined>;
+  /** Every completed session, oldest first — used to compare a just-finished session against personal bests. */
+  listCompleted(): Promise<PracticeSessionRecord[]>;
   updateProgress(
     id: string,
     patch: SessionProgressPatch,
+  ): Promise<PracticeSessionRecord>;
+  setVoiceCondition(
+    id: string,
+    voiceCondition: VoiceCondition,
   ): Promise<PracticeSessionRecord>;
   pause(id: string): Promise<PracticeSessionRecord>;
   resume(id: string): Promise<PracticeSessionRecord>;
@@ -41,31 +62,21 @@ export function createSessionsRepository(
   ): Promise<PracticeSessionRecord> {
     return db.transaction("rw", db.sessions, async () => {
       const existing = await requireSession(id);
-      const updated: PracticeSessionRecord = {
+      const updated = parseOrThrow(PracticeSessionSchema, "PracticeSession", {
         ...existing,
         ...extra,
         status,
         updatedAt: Date.now(),
-      };
+      });
       await db.sessions.put(updated);
       return updated;
     });
   }
 
   return {
-    async start(exerciseIds) {
+    async start(exerciseIds, options = {}) {
       return db.transaction("rw", db.sessions, async () => {
-        const now = Date.now();
-        const record: PracticeSessionRecord = {
-          id: generateId(),
-          status: "in_progress",
-          exerciseIds,
-          currentStepIndex: 0,
-          elapsedSeconds: 0,
-          startedAt: now,
-          updatedAt: now,
-          completedAt: null,
-        };
+        const record = createPracticeSession({ exerciseIds, ...options });
         await db.sessions.add(record);
         return record;
       });
@@ -78,9 +89,24 @@ export function createSessionsRepository(
         .last();
     },
 
+    async listCompleted() {
+      const records = await db.sessions
+        .where("status")
+        .equals("completed")
+        .toArray();
+      return records.sort(
+        (a, b) => (a.completedAt ?? 0) - (b.completedAt ?? 0),
+      );
+    },
+
     async updateProgress(id, patch) {
       const existing = await requireSession(id);
       return transition(id, existing.status, patch);
+    },
+
+    async setVoiceCondition(id, voiceCondition) {
+      const existing = await requireSession(id);
+      return transition(id, existing.status, { voiceCondition });
     },
 
     async pause(id) {

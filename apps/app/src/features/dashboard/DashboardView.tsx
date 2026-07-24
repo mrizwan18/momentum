@@ -1,36 +1,45 @@
 "use client";
 
-import { PageShell, Skeleton, SkeletonGroup, SkeletonText } from "@momentum/ui";
+import {
+  PageShell,
+  Reveal,
+  Skeleton,
+  SkeletonGroup,
+  SkeletonText,
+} from "@momentum/ui";
 import { useDashboardData } from "./hooks/use-dashboard-data";
 import { getPracticeStatus } from "./lib/streak";
-import { AchievementWidget } from "./components/AchievementWidget";
+import { DashboardBottomNav } from "./components/DashboardBottomNav";
+import { DashboardHeader } from "./components/DashboardHeader";
 import { Greeting } from "./components/Greeting";
-import { MomentumCard } from "./components/MomentumCard";
-import { OneThingCard } from "./components/OneThingCard";
-import { PracticeChecklist } from "./components/PracticeChecklist";
-import { PracticeCta } from "./components/PracticeCta";
-import { RoadmapWidget } from "./components/RoadmapWidget";
-import { ScoreCard } from "./components/ScoreCard";
+import { QuickPracticeRow } from "./components/QuickPracticeRow";
 import { StreakCard } from "./components/StreakCard";
-import { WeeklySnapshotCard } from "./components/WeeklySnapshotCard";
+import { TodayPracticeCard } from "./components/TodayPracticeCard";
 
 export function DashboardSkeleton() {
   return (
-    <PageShell withBottomNav={false} className="gap-4">
+    <PageShell className="gap-10">
       <SkeletonGroup label="Loading dashboard">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           <SkeletonText lines={2} />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-11 w-full" />
-          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-40 w-full rounded-hero" />
+          <Skeleton className="h-14 w-full rounded-control" />
         </div>
       </SkeletonGroup>
     </PageShell>
   );
 }
 
-/** docs/features/dashboard.md Layout Order, rendered top to bottom. */
+/**
+ * docs/design/references/dashboard.png layout, matched exactly: header
+ * (avatar/greeting/bell) -> hero "Today's Practice" -> Quick Practice
+ * shortcuts -> Current Streak (with its weekly chart) -> floating bottom
+ * nav. No separate "Start/Continue Practice" button — the hero card's own
+ * floating arrow is the one primary CTA into Practice (docs/foundation/
+ * ten-laws.md Law 5), matching the reference exactly. No Checklist section
+ * either — the reference doesn't have one, and Activity/Stats screens
+ * don't exist yet (CLAUDE.md phase order) for it to link anywhere real.
+ */
 export function DashboardView() {
   const state = useDashboardData();
 
@@ -38,21 +47,25 @@ export function DashboardView() {
     return <DashboardSkeleton />;
   }
 
-  const { streak, weekly, roadmapChapters, activeSession } = state.data;
+  const { streak, weeklyByDay, displayName, todayMinutes, todayGoal } =
+    state.data;
   const status = getPracticeStatus(streak);
 
   return (
-    <PageShell withBottomNav={false} className="gap-4">
-      <Greeting status={status} />
-      <StreakCard streak={streak} />
-      <ScoreCard />
-      <OneThingCard />
-      <PracticeCta activeSession={activeSession} />
-      <PracticeChecklist activeSession={activeSession} />
-      <MomentumCard />
-      <WeeklySnapshotCard weekly={weekly} />
-      <RoadmapWidget chapters={roadmapChapters} />
-      <AchievementWidget />
-    </PageShell>
+    <>
+      <PageShell className="gap-10">
+        <Reveal className="flex flex-col gap-6">
+          <DashboardHeader displayName={displayName} />
+          <Greeting status={status} />
+          <TodayPracticeCard
+            todayMinutes={todayMinutes}
+            todayGoal={todayGoal}
+          />
+          <QuickPracticeRow />
+          <StreakCard streak={streak} weeklyByDay={weeklyByDay} />
+        </Reveal>
+      </PageShell>
+      <DashboardBottomNav />
+    </>
   );
 }

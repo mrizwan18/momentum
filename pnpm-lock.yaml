@@ -192,6 +192,9 @@ importers:
       dexie:
         specifier: ^4.4.4
         version: 4.4.4
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@momentum/config':
         specifier: workspace:^
@@ -201,6 +204,10 @@ importers:
         version: 5.9.3
 
   packages/types:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@momentum/config':
         specifier: workspace:^

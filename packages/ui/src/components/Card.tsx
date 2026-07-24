@@ -2,27 +2,68 @@
 
 import * as React from "react";
 import { cn } from "../lib/cn";
+import { radiusStyle, shadowStyle } from "../lib/shape";
 import { SkeletonText } from "./Skeleton";
+
+/**
+ * docs/design/PIXEL_SPEC.md A2/A6: cards are borderless — separation from
+ * the page comes from shadow + surface tone, never a hairline border.
+ *
+ * Radius/shadow are applied via inline style (backed by the same CSS
+ * custom properties as everything else) rather than Tailwind utility
+ * classes — `rounded-card`/`shadow-card`/`shadow-hero` don't reliably
+ * compile in this project's production build (see lib/shape.ts).
+ * `rounded-hero` itself does compile, but its shadow doesn't, so "hero"
+ * still needs an inline style for the shadow half.
+ */
+type CardElevation = "flat" | "raised" | "hero";
+
+const elevationClassName: Record<CardElevation, string> = {
+  flat: "bg-surface",
+  raised: "bg-surface",
+  hero: "rounded-hero bg-surface",
+};
+
+const elevationInlineStyle: Record<CardElevation, React.CSSProperties> = {
+  flat: { borderRadius: radiusStyle.card.borderRadius },
+  raised: {
+    borderRadius: radiusStyle.card.borderRadius,
+    boxShadow: shadowStyle.card.boxShadow,
+  },
+  hero: { boxShadow: shadowStyle.hero.boxShadow },
+};
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Replaces children with skeleton placeholders while content loads. */
   loading?: boolean;
   /** Visually and functionally locks the card (e.g. a locked roadmap chapter). */
   disabled?: boolean;
+  /** Visual weight — "hero" is reserved for the single focal element per screen. */
+  elevation?: CardElevation;
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   (
-    { className, loading = false, disabled = false, children, ...props },
+    {
+      className,
+      style,
+      loading = false,
+      disabled = false,
+      elevation = "raised",
+      children,
+      ...props
+    },
     ref,
   ) => (
     <div
       ref={ref}
       aria-busy={loading || undefined}
       aria-disabled={disabled || undefined}
+      style={{ ...elevationInlineStyle[elevation], ...style }}
       className={cn(
-        "rounded-xl border border-border bg-surface text-foreground shadow-sm",
-        "transition-opacity duration-standard ease-momentum",
+        "text-foreground",
+        elevationClassName[elevation],
+        "transition-[opacity,box-shadow,border-color] duration-standard ease-momentum",
         disabled && "pointer-events-none opacity-50",
         className,
       )}

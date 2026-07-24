@@ -43,8 +43,8 @@ describe("useDashboardData", () => {
     if (result.current.status !== "ready") throw new Error("unreachable");
 
     expect(result.current.data.streak.current).toBe(0);
-    expect(result.current.data.weekly.practiceMinutes).toBe(0);
-    expect(result.current.data.roadmapChapters).toEqual([]);
+    expect(result.current.data.weeklyByDay).toHaveLength(7);
+    expect(result.current.data.todayMinutes).toBe(0);
     expect(result.current.data.activeSession).toBeNull();
   });
 
@@ -61,7 +61,7 @@ describe("useDashboardData", () => {
     if (result.current.status !== "ready") throw new Error("unreachable");
 
     expect(result.current.data.streak.current).toBe(1);
-    expect(result.current.data.weekly.practiceMinutes).toBe(15);
+    expect(result.current.data.todayMinutes).toBe(15);
   });
 
   it("surfaces a real active session and mirrors its id into the zustand store", async () => {
@@ -73,24 +73,5 @@ describe("useDashboardData", () => {
 
     expect(result.current.data.activeSession?.id).toBe(session.id);
     expect(useActiveSessionStore.getState().activeSessionId).toBe(session.id);
-  });
-
-  it("surfaces real roadmap chapters", async () => {
-    await storage.roadmap.seed([
-      {
-        id: "chapter-1",
-        order: 1,
-        title: "Foundations",
-        status: "unlocked",
-        updatedAt: Date.now(),
-      },
-    ]);
-
-    const { result } = renderHook(() => useDashboardData(), { wrapper });
-    await waitFor(() => expect(result.current.status).toBe("ready"));
-    if (result.current.status !== "ready") throw new Error("unreachable");
-
-    expect(result.current.data.roadmapChapters).toHaveLength(1);
-    expect(result.current.data.roadmapChapters[0].title).toBe("Foundations");
   });
 });

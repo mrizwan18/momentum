@@ -1,20 +1,27 @@
-import { generateId } from "@momentum/utils";
-import type { RecordingRecord } from "@momentum/types";
+import { RecordingSchema, type RecordingRecord } from "@momentum/types";
 import type { MomentumDatabase } from "../db";
+import { parseOrThrow } from "../validation";
+import {
+  createRecording,
+  type CreateRecordingInput,
+} from "../factories/recording-factory";
+import {
+  toRecordingSummaryDTO,
+  type RecordingSummaryDTO,
+} from "../mappers/recording-mapper";
 
-export interface CreateRecordingInput {
-  sessionId: string | null;
-  durationMs: number;
-  mimeType: string;
-  blob: Blob;
-  notes?: string | null;
-}
+export type { CreateRecordingInput };
 
 export interface RecordingsRepository {
   create(input: CreateRecordingInput): Promise<RecordingRecord>;
   list(): Promise<RecordingRecord[]>;
+  /** Metadata only, without Blobs — for list views. */
+  listSummaries(): Promise<RecordingSummaryDTO[]>;
+  /** Recordings made during one PracticeSession, newest first. */
+  listBySession(sessionId: string): Promise<RecordingRecord[]>;
   get(id: string): Promise<RecordingRecord | undefined>;
   toggleFavorite(id: string): Promise<RecordingRecord>;
+  rename(id: string, title: string | null): Promise<RecordingRecord>;
   remove(id: string): Promise<void>;
 }
 
@@ -24,16 +31,7 @@ export function createRecordingsRepository(
   return {
     async create(input) {
       return db.transaction("rw", db.recordings, async () => {
-        const record: RecordingRecord = {
-          id: generateId(),
-          sessionId: input.sessionId,
-          createdAt: Date.now(),
-          durationMs: input.durationMs,
-          mimeType: input.mimeType,
-          blob: input.blob,
-          favorite: false,
-          notes: input.notes ?? null,
-        };
+        const record = createRecording(input);
         await db.recordings.add(record);
         return record;
       });
@@ -41,6 +39,22 @@ export function createRecordingsRepository(
 
     async list() {
       return db.recordings.orderBy("createdAt").reverse().toArray();
+    },
+
+    async listSummaries() {
+      const records = await db.recordings
+        .orderBy("createdAt")
+        .reverse()
+        .toArray();
+      return records.map(toRecordingSummaryDTO);
+    },
+
+    async listBySession(sessionId) {
+      const records = await db.recordings
+        .where("sessionId")
+        .equals(sessionId)
+        .toArray();
+      return records.sort((a, b) => b.createdAt - a.createdAt);
     },
 
     async get(id) {
@@ -53,10 +67,25 @@ export function createRecordingsRepository(
         if (!existing) {
           throw new Error(`Recording ${id} was not found`);
         }
-        const updated: RecordingRecord = {
+        const updated = parseOrThrow(RecordingSchema, "Recording", {
           ...existing,
           favorite: !existing.favorite,
-        };
+        });
+        await db.recordings.put(updated);
+        return updated;
+      });
+    },
+
+    async rename(id, title) {
+      return db.transaction("rw", db.recordings, async () => {
+        const existing = await db.recordings.get(id);
+        if (!existing) {
+          throw new Error(`Recording ${id} was not found`);
+        }
+        const updated = parseOrThrow(RecordingSchema, "Recording", {
+          ...existing,
+          title,
+        });
         await db.recordings.put(updated);
         return updated;
       });

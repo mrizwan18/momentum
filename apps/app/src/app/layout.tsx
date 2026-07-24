@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { AppProviders } from "@/providers";
 import { THEME_STORAGE_KEY } from "@/lib/theme-storage-key";
 import "@/styles/globals.css";
 
-const inter = Inter({
+// Rounded-geometric sans per docs/design/PIXEL_SPEC.md's typography spec
+// (closest web-safe match to the reference screenshots' SF Pro Rounded).
+const appFont = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-app",
   display: "swap",
 });
 
@@ -27,8 +29,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "hsl(222 20% 8%)" },
-    { media: "(prefers-color-scheme: light)", color: "hsl(40 33% 98%)" },
+    { media: "(prefers-color-scheme: dark)", color: "hsl(233 28% 8%)" },
+    { media: "(prefers-color-scheme: light)", color: "hsl(230 45% 97%)" },
   ],
 };
 
@@ -36,7 +38,7 @@ export const viewport: Viewport = {
 // wrong theme; mirrors the shape zustand/persist writes to localStorage.
 const noFlashThemeScript = `(function(){try{var raw=localStorage.getItem(${JSON.stringify(
   THEME_STORAGE_KEY,
-)});var preference="dark";if(raw){var parsed=JSON.parse(raw);preference=(parsed&&parsed.state&&parsed.state.theme)||"dark";}var resolved=preference;if(preference==="system"){resolved=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",resolved);}catch(error){}})();`;
+)});var preference="light";if(raw){var parsed=JSON.parse(raw);preference=(parsed&&parsed.state&&parsed.state.theme)||"light";}var resolved=preference;if(preference==="system"){resolved=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",resolved);}catch(error){}})();`;
 
 export default function RootLayout({
   children,
@@ -44,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang="en" suppressHydrationWarning className={appFont.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />
       </head>
