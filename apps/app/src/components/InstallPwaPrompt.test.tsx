@@ -13,7 +13,7 @@ const mockedUsePwaInstall = vi.mocked(usePwaInstall);
 
 describe("InstallPwaPrompt", () => {
   beforeEach(() => {
-    window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -56,7 +56,7 @@ describe("InstallPwaPrompt", () => {
     expect(promptInstall).toHaveBeenCalled();
   });
 
-  it("hides itself and remembers the dismissal when the X is tapped", async () => {
+  it("hides itself and remembers the dismissal for this session", async () => {
     mockedUsePwaInstall.mockReturnValue({
       status: "available",
       promptInstall: vi.fn(),
@@ -69,15 +69,12 @@ describe("InstallPwaPrompt", () => {
 
     expect(screen.queryByText("Install Momentum")).not.toBeInTheDocument();
     expect(
-      window.localStorage.getItem("momentum-install-prompt-dismissed-at"),
-    ).not.toBeNull();
+      window.sessionStorage.getItem("momentum-install-prompt-dismissed"),
+    ).toBe("1");
   });
 
-  it("stays hidden on a fresh mount if dismissed within the last 7 days", () => {
-    window.localStorage.setItem(
-      "momentum-install-prompt-dismissed-at",
-      String(Date.now()),
-    );
+  it("stays hidden on a fresh mount within the same session", () => {
+    window.sessionStorage.setItem("momentum-install-prompt-dismissed", "1");
     mockedUsePwaInstall.mockReturnValue({
       status: "available",
       promptInstall: vi.fn(),
@@ -86,12 +83,9 @@ describe("InstallPwaPrompt", () => {
     expect(screen.queryByText("Install Momentum")).not.toBeInTheDocument();
   });
 
-  it("shows again once the dismissal cooldown has expired", () => {
-    const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
-    window.localStorage.setItem(
-      "momentum-install-prompt-dismissed-at",
-      String(eightDaysAgo),
-    );
+  it("shows again in a new session (sessionStorage cleared) even if dismissed before", () => {
+    window.sessionStorage.setItem("momentum-install-prompt-dismissed", "1");
+    window.sessionStorage.clear();
     mockedUsePwaInstall.mockReturnValue({
       status: "available",
       promptInstall: vi.fn(),

@@ -12,30 +12,25 @@ import {
 } from "@momentum/ui";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 
-const DISMISS_STORAGE_KEY = "momentum-install-prompt-dismissed-at";
-const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+const SESSION_DISMISS_KEY = "momentum-install-prompt-dismissed";
 
-function wasRecentlyDismissed(): boolean {
+function wasDismissedThisSession(): boolean {
   if (typeof window === "undefined") return false;
-  const raw = window.localStorage.getItem(DISMISS_STORAGE_KEY);
-  const dismissedAt = raw ? Number(raw) : NaN;
-  return (
-    Number.isFinite(dismissedAt) &&
-    Date.now() - dismissedAt < DISMISS_COOLDOWN_MS
-  );
+  return window.sessionStorage.getItem(SESSION_DISMISS_KEY) === "1";
 }
 
 /**
  * A single floating card — never a blocking modal — that appears only once
  * the browser actually offers an install (a real `beforeinstallprompt`,
  * never fabricated) and disappears for good once installed. Dismissing it
- * snoozes for a week rather than hiding it forever, so it stays
- * "eye-catching but not annoying" without nagging on every visit.
+ * only silences it for the rest of this browser session (sessionStorage,
+ * not localStorage) — it comes back the next time the user opens the app,
+ * so it keeps converting without nagging mid-session on every action.
  */
 export function InstallPwaPrompt() {
   const { status, promptInstall } = usePwaInstall();
   const [dismissed, setDismissed] = React.useState(() =>
-    wasRecentlyDismissed(),
+    wasDismissedThisSession(),
   );
 
   if (status !== "available" || dismissed) {
@@ -43,7 +38,7 @@ export function InstallPwaPrompt() {
   }
 
   function handleDismiss() {
-    window.localStorage.setItem(DISMISS_STORAGE_KEY, String(Date.now()));
+    window.sessionStorage.setItem(SESSION_DISMISS_KEY, "1");
     setDismissed(true);
   }
 
