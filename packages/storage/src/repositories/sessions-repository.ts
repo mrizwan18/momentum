@@ -30,6 +30,8 @@ export interface SessionsRepository {
   getActive(): Promise<PracticeSessionRecord | undefined>;
   /** Every completed session, oldest first — used to compare a just-finished session against personal bests. */
   listCompleted(): Promise<PracticeSessionRecord[]>;
+  /** Every completed OR abandoned session, oldest first — used for Progress's completion rate and history. */
+  listTerminal(): Promise<PracticeSessionRecord[]>;
   updateProgress(
     id: string,
     patch: SessionProgressPatch,
@@ -97,6 +99,14 @@ export function createSessionsRepository(
       return records.sort(
         (a, b) => (a.completedAt ?? 0) - (b.completedAt ?? 0),
       );
+    },
+
+    async listTerminal() {
+      const records = await db.sessions
+        .where("status")
+        .anyOf(["completed", "abandoned"])
+        .toArray();
+      return records.sort((a, b) => a.updatedAt - b.updatedAt);
     },
 
     async updateProgress(id, patch) {

@@ -78,4 +78,24 @@ describe("exercise attempt repository", () => {
     const list = await repo.listBySession("session-1");
     expect(list).toHaveLength(1);
   });
+
+  it("lists every attempt across all sessions, oldest first", async () => {
+    const repo = createExerciseAttemptRepository(db);
+    const first = await repo.record({
+      sessionId: "session-1",
+      exerciseId: "breathing",
+      status: "completed",
+      durationSeconds: 30,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    const second = await repo.record({
+      sessionId: "session-2",
+      exerciseId: "warmup",
+      status: "completed",
+      durationSeconds: 60,
+    });
+
+    const list = await repo.listAll();
+    expect(list.map((a) => a.id)).toEqual([first.id, second.id]);
+  });
 });

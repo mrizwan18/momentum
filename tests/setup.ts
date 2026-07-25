@@ -33,3 +33,14 @@ if (!URL.createObjectURL) {
     registry.delete(url);
   };
 }
+
+// jsdom doesn't implement ResizeObserver. Recharts' ResponsiveContainer
+// (Progress feature's charts) needs it just to exist — jsdom's 0x0 layout
+// means charts render empty, but that's a jsdom limitation, not a bug.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

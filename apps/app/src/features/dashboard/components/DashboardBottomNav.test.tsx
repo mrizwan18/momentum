@@ -1,24 +1,49 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { DashboardBottomNav } from "./DashboardBottomNav";
 
+const push = vi.fn();
+let pathname = "/";
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push }),
+  usePathname: () => pathname,
 }));
 
 describe("DashboardBottomNav", () => {
-  it("marks Home as the active, enabled tab", () => {
+  afterEach(() => {
+    push.mockClear();
+    pathname = "/";
+  });
+
+  it("marks Home as active on '/'", () => {
     render(<DashboardBottomNav />);
     const home = screen.getByRole("button", { name: "Home" });
     expect(home).toBeEnabled();
     expect(home).toHaveAttribute("aria-current", "page");
   });
 
+  it("marks Stats as active on '/progress'", () => {
+    pathname = "/progress";
+    render(<DashboardBottomNav />);
+    const stats = screen.getByRole("button", { name: "Stats" });
+    expect(stats).toBeEnabled();
+    expect(stats).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Home" })).not.toHaveAttribute(
+      "aria-current",
+    );
+  });
+
+  it("navigates to /progress when Stats is tapped", async () => {
+    render(<DashboardBottomNav />);
+    await userEvent.click(screen.getByRole("button", { name: "Stats" }));
+    expect(push).toHaveBeenCalledWith("/progress");
+  });
+
   it("disables the not-yet-built tabs", () => {
     render(<DashboardBottomNav />);
     expect(screen.getByRole("button", { name: /activity/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /stats/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /profile/i })).toBeDisabled();
   });
 

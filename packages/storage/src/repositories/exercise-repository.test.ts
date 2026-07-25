@@ -83,4 +83,27 @@ describe("exercise repository", () => {
     const list = await repo.listBySkill("skill-1");
     expect(list).toHaveLength(1);
   });
+
+  it("lists every exercise across every skill", async () => {
+    const repo = createExerciseRepository(db);
+    await repo.seed([
+      createExercise({
+        skillId: "skill-1",
+        category: "breathing",
+        title: "Breathing",
+        targetDurationSeconds: 60,
+        order: 0,
+      }),
+      createExercise({
+        skillId: "skill-2",
+        category: "song",
+        title: "Song",
+        targetDurationSeconds: 120,
+        order: 0,
+      }),
+    ]);
+
+    const list = await repo.listAll();
+    expect(list).toHaveLength(2);
+  });
 });

@@ -10,6 +10,8 @@ export type { CreateExerciseAttemptInput };
 export interface ExerciseAttemptRepository {
   record(input: CreateExerciseAttemptInput): Promise<ExerciseAttemptRecord>;
   listBySession(sessionId: string): Promise<ExerciseAttemptRecord[]>;
+  /** Every attempt ever recorded, oldest first — used for Progress's exercise distribution. */
+  listAll(): Promise<ExerciseAttemptRecord[]>;
   get(id: string): Promise<ExerciseAttemptRecord | undefined>;
 }
 
@@ -30,6 +32,11 @@ export function createExerciseAttemptRepository(
         .where("sessionId")
         .equals(sessionId)
         .toArray();
+      return attempts.sort((a, b) => a.createdAt - b.createdAt);
+    },
+
+    async listAll() {
+      const attempts = await db.exerciseAttempts.toArray();
       return attempts.sort((a, b) => a.createdAt - b.createdAt);
     },
 

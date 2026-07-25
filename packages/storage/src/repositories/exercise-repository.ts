@@ -5,6 +5,8 @@ export interface ExerciseRepository {
   /** Only inserts when the catalog is empty — content is seeded, not user-created. */
   seed(exercises: ExerciseRecord[]): Promise<void>;
   listBySkill(skillId: string): Promise<ExerciseRecord[]>;
+  /** Every exercise across every skill — used to map exerciseId -> category for Progress's exercise distribution. */
+  listAll(): Promise<ExerciseRecord[]>;
   get(id: string): Promise<ExerciseRecord | undefined>;
 }
 
@@ -27,6 +29,10 @@ export function createExerciseRepository(
         .equals(skillId)
         .toArray();
       return exercises.sort((a, b) => a.order - b.order);
+    },
+
+    async listAll() {
+      return db.exercises.toArray();
     },
 
     async get(id) {

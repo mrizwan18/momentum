@@ -68,4 +68,20 @@ describe("sessions repository", () => {
       second.id,
     ]);
   });
+
+  it("lists both completed and abandoned sessions, oldest first, excluding in-progress/paused", async () => {
+    const repo = createSessionsRepository(db);
+    const completed = await repo.start(["breathing"]);
+    await repo.complete(completed.id);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    const abandoned = await repo.start(["warmup"]);
+    await repo.abandon(abandoned.id);
+    await repo.start(["scales"]); // left in_progress — must be excluded
+
+    const terminal = await repo.listTerminal();
+    expect(terminal.map((session) => session.id)).toEqual([
+      completed.id,
+      abandoned.id,
+    ]);
+  });
 });

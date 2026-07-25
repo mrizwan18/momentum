@@ -6,21 +6,21 @@ import {
   type MomentumStorage,
 } from "@momentum/storage";
 import { StorageProvider } from "@/providers/storage-provider";
-import { DashboardEntry } from "./DashboardEntry";
+import { ProgressEntry } from "./ProgressEntry";
 
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace }),
-  usePathname: () => "/",
+  useRouter: () => ({ push: vi.fn(), replace }),
+  usePathname: () => "/progress",
 }));
 
 let storage: MomentumStorage;
 
-describe("DashboardEntry", () => {
+describe("ProgressEntry", () => {
   beforeEach(() => {
     replace.mockClear();
     storage = createMomentumStorage(
-      createMomentumDatabase(`test-dashboard-entry-${Math.random()}`),
+      createMomentumDatabase(`test-progress-entry-${Math.random()}`),
     );
   });
 
@@ -31,25 +31,24 @@ describe("DashboardEntry", () => {
   it("redirects to /onboarding when onboarding hasn't been completed", async () => {
     render(
       <StorageProvider value={storage}>
-        <DashboardEntry />
+        <ProgressEntry />
       </StorageProvider>,
     );
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
   });
 
-  it("renders the Dashboard without redirecting once onboarding is completed", async () => {
+  it("renders Progress without redirecting once onboarding is completed", async () => {
     await storage.users.completeOnboarding();
 
     render(
       <StorageProvider value={storage}>
-        <DashboardEntry />
+        <ProgressEntry />
       </StorageProvider>,
     );
 
     await waitFor(
-      () =>
-        expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument(),
+      () => expect(screen.getByText("Progress")).toBeInTheDocument(),
       { timeout: 5000 },
     );
     expect(replace).not.toHaveBeenCalled();
