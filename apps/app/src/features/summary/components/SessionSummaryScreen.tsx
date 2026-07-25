@@ -17,6 +17,8 @@ import {
   Text,
   triggerHaptic,
 } from "@momentum/ui";
+import { NotificationOptInPrompt } from "@/components/NotificationOptInPrompt";
+import { toDateOnly } from "@/lib/date";
 import { formatDuration } from "@/lib/format-duration";
 import type { SessionSummaryView } from "../services/summary-service";
 
@@ -192,7 +194,14 @@ export function SessionSummaryScreen({ summary }: SessionSummaryScreenProps) {
         </Reveal>
       ) : null}
 
-      <Reveal delay={0.4}>
+      <NotificationOptInPrompt
+        engagement={{
+          currentStreak: summary.streak.current,
+          lastPracticedDate: toDateOnly(new Date()),
+        }}
+      />
+
+      <Reveal delay={0.45}>
         <Button asChild className="h-14 w-full text-base font-semibold">
           <Link href="/">Back to Dashboard</Link>
         </Button>

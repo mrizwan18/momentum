@@ -10,6 +10,8 @@ import {
   buildSessionSummary,
   type SessionSummaryView,
 } from "@/features/summary";
+import { toDateOnly } from "@/lib/date";
+import { syncPushEngagement } from "@/lib/push/sync-engagement-client";
 
 export interface StartSessionParams {
   skillId: string;
@@ -136,5 +138,9 @@ export async function finishSession(
 ): Promise<FinishSessionResult> {
   const completed = await storage.sessions.complete(session.id);
   const summary = await buildSessionSummary(storage, completed);
+  syncPushEngagement({
+    currentStreak: summary.streak.current,
+    lastPracticedDate: toDateOnly(new Date()),
+  });
   return { session: completed, summary };
 }

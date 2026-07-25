@@ -51,6 +51,15 @@ features - AI/LLM integration
 
 ---
 
+## Scope Exception: Push Notifications
+
+Backend/cloud-sync is otherwise out of MVP scope, but push
+notifications (subscriptions + send-scheduling) are a deliberate,
+scoped exception approved on 2026-07-25. No other backend features
+(login, accounts, payments, etc.) are in scope.
+
+---
+
 # Technology Stack
 
 - Next.js 15 (App Router)
