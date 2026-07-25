@@ -21,6 +21,7 @@ apps/app/public/sw.js.map
 apps/app/public/swe-worker*.js
 apps/app/public/workbox-*.js
 apps/app/public/fallback-*.js
+apps/app/public/worker-*.js
 
 # production
 /build

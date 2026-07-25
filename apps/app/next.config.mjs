@@ -6,6 +6,10 @@ const withPWA = withPWAInit({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
+  // Default customWorkerSrc ("worker") resolves relative to the project
+  // root, not src/ — without this the push/notificationclick handlers in
+  // src/worker/index.js silently never get bundled into the generated sw.js.
+  customWorkerSrc: "src/worker",
   fallbacks: {
     document: "/offline",
   },
