@@ -82,7 +82,12 @@ export function createAiGateway({ provider, cache }: AiGatewayDeps) {
       try {
         const raw = await call(candidate);
         const parsed = schema.safeParse(raw);
-        if (!parsed.success) return null;
+        if (!parsed.success) {
+          console.log(
+            `[ai][gateway] ${operation}: "${candidate.name}" response failed schema validation: ${parsed.error.message}`,
+          );
+          return null;
+        }
         return {
           data: parsed.data,
           provider: candidate.name,
@@ -90,13 +95,19 @@ export function createAiGateway({ provider, cache }: AiGatewayDeps) {
           cached: false,
           generatedAt: Date.now(),
         };
-      } catch {
+      } catch (error) {
+        console.log(
+          `[ai][gateway] ${operation}: "${candidate.name}" threw: ${error instanceof Error ? error.message : String(error)}`,
+        );
         return null;
       }
     }
 
     let result = await attempt(provider, false);
     if (!result && provider.name !== "mock") {
+      console.log(
+        `[ai][gateway] ${operation}: falling back to mock after "${provider.name}" failed`,
+      );
       result = await attempt(createMockProvider(), true);
     }
 

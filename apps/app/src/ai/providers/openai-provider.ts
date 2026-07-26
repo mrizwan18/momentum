@@ -22,9 +22,19 @@ import { extractJson } from "./parse-json-response";
 async function chatJson(prompt: string): Promise<unknown> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
+    console.log("[ai][openai] skipped: OPENAI_API_KEY is not configured");
     throw new AiUnavailableError("OPENAI_API_KEY is not configured");
   }
   const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+
+  // Debugging aid (Sprint 9 rollout) — logs to Vercel's function logs so
+  // the actual outbound request/response is visible without depending on
+  // OpenAI's own request-logging setting. Remove once the integration is
+  // confirmed working end-to-end.
+  console.log(
+    `[ai][openai] sending request: model="${model}" promptLength=${prompt.length}`,
+  );
+  console.log(`[ai][openai] prompt:\n${prompt}`);
 
   let response: Response;
   try {
@@ -42,12 +52,19 @@ async function chatJson(prompt: string): Promise<unknown> {
       }),
     });
   } catch (error) {
+    console.log(
+      `[ai][openai] fetch threw: ${error instanceof Error ? error.message : String(error)}`,
+    );
     throw new AiUnavailableError(
       `OpenAI request failed to send: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
+  console.log(`[ai][openai] response status: ${response.status}`);
+
   if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    console.log(`[ai][openai] error body: ${errorBody}`);
     throw new AiUnavailableError(
       `OpenAI request failed with status ${response.status}`,
     );
@@ -57,6 +74,7 @@ async function chatJson(prompt: string): Promise<unknown> {
     choices?: { message?: { content?: string } }[];
   };
   const content = payload.choices?.[0]?.message?.content;
+  console.log(`[ai][openai] response content:\n${content ?? "(missing)"}`);
   if (typeof content !== "string") {
     throw new AiUnavailableError("OpenAI response missing message content");
   }

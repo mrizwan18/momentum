@@ -41,5 +41,12 @@ export function createProviderFromEnv(): AiProvider {
   const configured = process.env.AI_PROVIDER;
   const name =
     configured && isValidProviderName(configured) ? configured : "mock";
+  // Debugging aid (Sprint 9 rollout) — confirms in Vercel's function logs
+  // which provider a given request actually resolved to, since a stale
+  // deployment or an invalid AI_PROVIDER value both silently fall back to
+  // "mock" with no visible error otherwise.
+  console.log(
+    `[ai] createProviderFromEnv: AI_PROVIDER="${configured ?? "(unset)"}" -> resolved "${name}"`,
+  );
   return createProvider(name);
 }
