@@ -41,10 +41,23 @@ describe("DashboardBottomNav", () => {
     expect(push).toHaveBeenCalledWith("/progress");
   });
 
-  it("disables the not-yet-built tabs", () => {
+  it("marks Coach as active on '/coach'", () => {
+    pathname = "/coach";
+    render(<DashboardBottomNav />);
+    const coach = screen.getByRole("button", { name: "Coach" });
+    expect(coach).toBeEnabled();
+    expect(coach).toHaveAttribute("aria-current", "page");
+  });
+
+  it("navigates to /coach when Coach is tapped", async () => {
+    render(<DashboardBottomNav />);
+    await userEvent.click(screen.getByRole("button", { name: "Coach" }));
+    expect(push).toHaveBeenCalledWith("/coach");
+  });
+
+  it("disables the not-yet-built Activity tab", () => {
     render(<DashboardBottomNav />);
     expect(screen.getByRole("button", { name: /activity/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /profile/i })).toBeDisabled();
   });
 
   it("has no accessibility violations", async () => {

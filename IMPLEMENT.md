@@ -60,6 +60,21 @@ scoped exception approved on 2026-07-25. No other backend features
 
 ---
 
+## Scope Exception: AI Intelligence Layer
+
+"AI/LLM integration" is otherwise out of MVP scope, but Sprint 9 (the
+AI Intelligence Layer — provider gateway, baseline vocal assessment,
+session/dashboard/coach AI features) is a deliberate, scoped exception
+approved on 2026-07-26. Every AI call is server-side only (provider
+keys never reach the client), goes through a single gateway, and is
+built against a swappable provider interface with a Mock Provider for
+development/testing — real OpenAI/Gemini/Ollama credentials are the
+user's own to supply and were not available to verify end-to-end in
+this environment. No other backend features beyond this and the
+already-approved push-notification exception are in scope.
+
+---
+
 # Technology Stack
 
 - Next.js 15 (App Router)

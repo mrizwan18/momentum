@@ -10,8 +10,10 @@ import {
   SkeletonGroup,
   SkeletonText,
 } from "@momentum/ui";
+import { useBaselineComparison } from "./hooks/use-baseline-comparison";
 import { useProgressData } from "./hooks/use-progress-data";
 import {
+  BaselineComparisonCard,
   ExerciseDistributionCard,
   HeatmapCard,
   HistoryList,
@@ -41,10 +43,12 @@ export function ProgressSkeleton() {
  * History / weekly & monthly graphs / heatmap / practice frequency /
  * completion rate / exercise distribution / streak history / personal
  * records / trend calculations — all real Dexie-backed data (packages/
- * storage), no AI insights, recommendations, or roadmap content.
+ * storage). Sprint 9 adds one AI surface here: Baseline Comparison, shown
+ * only once a baseline and at least one AI session insight both exist.
  */
 export function ProgressView() {
   const state = useProgressData();
+  const baselineComparison = useBaselineComparison();
 
   if (state.status === "loading") {
     return <ProgressSkeleton />;
@@ -65,6 +69,13 @@ export function ProgressView() {
                 frequency={data.frequency}
                 completionRate={data.completionRate}
               />
+              {baselineComparison.comparison ? (
+                <BaselineComparisonCard
+                  comparison={baselineComparison.comparison}
+                  aiSummary={baselineComparison.aiSummary}
+                  aiStatus={baselineComparison.aiStatus}
+                />
+              ) : null}
               <WeeklyGraphCard weekly={data.weekly} trend={data.weeklyTrend} />
               <MonthlyGraphCard
                 monthly={data.monthly}

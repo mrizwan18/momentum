@@ -15,14 +15,41 @@ vi.mock("next/navigation", () => ({
 
 let storage: MomentumStorage;
 
+const dashboardInsightResponseData = {
+  todaysFocus: "Breath control",
+  dailyInsight: "You've been consistent this week.",
+  motivationalMessage: "Keep it up!",
+  practiceRecommendation: "Try the breathing exercises",
+  estimatedImprovementPercent: 5,
+  suggestedSessionLengthMinutes: 15,
+  recoveryAdvice: null,
+};
+
 describe("Home", () => {
   beforeEach(() => {
     storage = createMomentumStorage(
       createMomentumDatabase(`test-home-page-${Math.random()}`),
     );
+    // DashboardView kicks off a real AI Gateway call in the background —
+    // mocked here so it resolves quickly and deterministically.
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              data: dashboardInsightResponseData,
+              provider: "mock",
+            }),
+            { status: 200 },
+          ),
+        ),
+    );
   });
 
   afterEach(async () => {
+    vi.unstubAllGlobals();
     await storage.db.delete();
   });
 

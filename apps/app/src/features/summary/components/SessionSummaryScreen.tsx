@@ -2,7 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CheckCircle2, Flame, Mic, NotebookPen, Trophy } from "lucide-react";
+import {
+  CheckCircle2,
+  Flame,
+  Mic,
+  NotebookPen,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
 import {
   Button,
   Card,
@@ -17,13 +24,18 @@ import {
   Text,
   triggerHaptic,
 } from "@momentum/ui";
+import type { AiSessionInsightRecord } from "@momentum/types";
 import { NotificationOptInPrompt } from "@/components/NotificationOptInPrompt";
 import { toDateOnly } from "@/lib/date";
 import { formatDuration } from "@/lib/format-duration";
 import type { SessionSummaryView } from "../services/summary-service";
+import type { SessionInsightStatus } from "../hooks/use-session-insight";
 
 export interface SessionSummaryScreenProps {
   summary: SessionSummaryView;
+  /** The real, AI-generated session insight — null until it's ready (or never, if offline). */
+  aiInsight?: AiSessionInsightRecord | null;
+  aiInsightStatus?: SessionInsightStatus;
 }
 
 interface StatTileProps {
@@ -55,7 +67,11 @@ function StatTile({ label, value, caption }: StatTileProps) {
  * Every number here comes from `buildSessionSummary`; nothing is fabricated
  * for effect.
  */
-export function SessionSummaryScreen({ summary }: SessionSummaryScreenProps) {
+export function SessionSummaryScreen({
+  summary,
+  aiInsight = null,
+  aiInsightStatus = "idle",
+}: SessionSummaryScreenProps) {
   React.useEffect(() => {
     triggerHaptic("success");
   }, []);
@@ -189,6 +205,80 @@ export function SessionSummaryScreen({ summary }: SessionSummaryScreenProps) {
                   </Text>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </Reveal>
+      ) : null}
+
+      {aiInsightStatus !== "idle" ? (
+        <Reveal delay={0.4}>
+          <Card>
+            <CardHeader className="flex-row items-center gap-2">
+              <Sparkles aria-hidden="true" className="h-5 w-5 text-primary" />
+              <CardTitle as="h2">AI Coach Insight</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {aiInsightStatus === "running" ? (
+                <Text tone="muted" size="sm">
+                  Your AI coach is reviewing this session…
+                </Text>
+              ) : aiInsightStatus === "pending-offline" ? (
+                <Text tone="muted" size="sm">
+                  We&apos;ll add your AI insight once you&apos;re back online.
+                </Text>
+              ) : aiInsight ? (
+                <>
+                  <Text size="sm">{aiInsight.encouragingSentence}</Text>
+                  {aiInsight.whatImproved.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      <Text size="sm" className="font-medium">
+                        What improved
+                      </Text>
+                      {aiInsight.whatImproved.map((item) => (
+                        <Text key={item} tone="muted" size="sm">
+                          • {item}
+                        </Text>
+                      ))}
+                    </div>
+                  ) : null}
+                  {aiInsight.whatDeclined.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      <Text size="sm" className="font-medium">
+                        What declined
+                      </Text>
+                      {aiInsight.whatDeclined.map((item) => (
+                        <Text key={item} tone="muted" size="sm">
+                          • {item}
+                        </Text>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="flex flex-col gap-1">
+                    <Text size="sm" className="font-medium">
+                      Best moment
+                    </Text>
+                    <Text tone="muted" size="sm">
+                      {aiInsight.bestMoment}
+                    </Text>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Text size="sm" className="font-medium">
+                      Biggest opportunity
+                    </Text>
+                    <Text tone="muted" size="sm">
+                      {aiInsight.biggestOpportunity}
+                    </Text>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Text size="sm" className="font-medium">
+                      Tomorrow&apos;s goal
+                    </Text>
+                    <Text tone="muted" size="sm">
+                      {aiInsight.tomorrowsGoal}
+                    </Text>
+                  </div>
+                </>
+              ) : null}
             </CardContent>
           </Card>
         </Reveal>

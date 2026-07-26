@@ -100,6 +100,102 @@ describe("ProgressView", () => {
     expect(screen.getByText("History")).toBeInTheDocument();
   });
 
+  it("shows the Baseline Comparison card once a baseline and a session insight both exist", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: {
+              summary: "You're pitching more accurately than your baseline.",
+            },
+            provider: "mock",
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const metrics = {
+      pitchAccuracy: 80,
+      pitchStability: 80,
+      rhythm: 80,
+      breathControl: 80,
+      toneQuality: 80,
+      consistency: 80,
+      vocalRange: 80,
+      confidence: 80,
+      timing: 80,
+      voiceClarity: 80,
+      pronunciation: 80,
+      energy: 80,
+    };
+    await storage.baselineAssessments.create({
+      recordingId: "recording-1",
+      overallScore: 70,
+      metrics: { ...metrics, pitchAccuracy: 60 },
+      strengths: ["Tone"],
+      areasToImprove: ["Pitch"],
+      recommendedDailyPractice: "Scales",
+      recommendedDurationMinutes: 15,
+      suggestedSkillLevel: "beginner",
+      difficulty: "easy",
+      motivationalSummary: "Great start!",
+      provider: "mock",
+    });
+    await storage.exercises.seed([
+      createExercise({
+        skillId: "riyaaz",
+        category: "breathing",
+        title: "Breathing",
+        targetDurationSeconds: 60,
+        order: 0,
+      }),
+    ]);
+    const exercises = await storage.exercises.listBySkill("riyaaz");
+    const session = await storage.sessions.start(["breathing"], {
+      skillId: "riyaaz",
+    });
+    await storage.exerciseAttempts.record({
+      sessionId: session.id,
+      exerciseId: exercises[0].id,
+      status: "completed",
+      durationSeconds: 45,
+    });
+    const completed = await storage.sessions.complete(session.id);
+    await storage.sessionSummaries.create({
+      sessionId: completed.id,
+      xpEarned: 100,
+      overallScore: 75,
+    });
+    await storage.aiSessionInsights.create({
+      sessionId: completed.id,
+      whatImproved: ["Pitch"],
+      whatDeclined: [],
+      bestMoment: "Great run",
+      biggestOpportunity: "Breathing",
+      tomorrowsGoal: "Keep it up",
+      encouragingSentence: "Nice work!",
+      metricsSnapshot: metrics,
+      provider: "mock",
+    });
+    await storage.statistics.upsertForDate({
+      date: toDateOnly(new Date()),
+      practiceMinutes: 15,
+      sessionsCompleted: 1,
+    });
+
+    renderProgress();
+
+    expect(await screen.findByText("Since Your Baseline")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "You're pitching more accurately than your baseline.",
+      ),
+    ).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
   it("has no accessibility violations once loaded (empty state)", async () => {
     const { container } = renderProgress();
     await waitFor(() =>

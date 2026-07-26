@@ -1,4 +1,5 @@
 export { OverviewStats } from "./OverviewStats";
+export { BaselineComparisonCard } from "./BaselineComparisonCard";
 export { WeeklyGraphCard } from "./WeeklyGraphCard";
 export { MonthlyGraphCard } from "./MonthlyGraphCard";
 export { HeatmapCard } from "./HeatmapCard";

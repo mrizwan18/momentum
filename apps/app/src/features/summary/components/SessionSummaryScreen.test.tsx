@@ -1,9 +1,39 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import type { PracticeSessionRecord } from "@momentum/types";
+import type {
+  AiSessionInsightRecord,
+  PracticeSessionRecord,
+} from "@momentum/types";
 import type { SessionSummaryView } from "../services/summary-service";
 import { SessionSummaryScreen } from "./SessionSummaryScreen";
+
+const aiInsight: AiSessionInsightRecord = {
+  id: "session-1",
+  sessionId: "session-1",
+  whatImproved: ["Breath support"],
+  whatDeclined: ["Pitch on high notes"],
+  bestMoment: "The final scale run",
+  biggestOpportunity: "Warm up longer next time",
+  tomorrowsGoal: "Focus on breath control",
+  encouragingSentence: "Great focus today!",
+  metricsSnapshot: {
+    pitchAccuracy: 80,
+    pitchStability: 80,
+    rhythm: 80,
+    breathControl: 80,
+    toneQuality: 80,
+    consistency: 80,
+    vocalRange: 80,
+    confidence: 80,
+    timing: 80,
+    voiceClarity: 80,
+    pronunciation: 80,
+    energy: 80,
+  },
+  provider: "mock",
+  createdAt: 0,
+};
 
 const session: PracticeSessionRecord = {
   id: "session-1",
@@ -152,6 +182,52 @@ describe("SessionSummaryScreen", () => {
 
     render(<SessionSummaryScreen summary={makeSummary()} />);
     expect(vibrate).toHaveBeenCalled();
+  });
+
+  it("does not render an AI Coach Insight card when no AI status is provided", () => {
+    render(<SessionSummaryScreen summary={makeSummary()} />);
+    expect(screen.queryByText("AI Coach Insight")).not.toBeInTheDocument();
+  });
+
+  it("shows a reviewing message while the AI insight is running", () => {
+    render(
+      <SessionSummaryScreen
+        summary={makeSummary()}
+        aiInsightStatus="running"
+        aiInsight={null}
+      />,
+    );
+    expect(screen.getByText("AI Coach Insight")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your AI coach is reviewing this session…"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows an offline message when the AI insight is pending", () => {
+    render(
+      <SessionSummaryScreen
+        summary={makeSummary()}
+        aiInsightStatus="pending-offline"
+        aiInsight={null}
+      />,
+    );
+    expect(screen.getByText(/back online/)).toBeInTheDocument();
+  });
+
+  it("shows the real AI insight once ready", () => {
+    render(
+      <SessionSummaryScreen
+        summary={makeSummary()}
+        aiInsightStatus="ready"
+        aiInsight={aiInsight}
+      />,
+    );
+    expect(screen.getByText("Great focus today!")).toBeInTheDocument();
+    expect(screen.getByText(/Breath support/)).toBeInTheDocument();
+    expect(screen.getByText(/Pitch on high notes/)).toBeInTheDocument();
+    expect(screen.getByText("The final scale run")).toBeInTheDocument();
+    expect(screen.getByText("Warm up longer next time")).toBeInTheDocument();
+    expect(screen.getByText("Focus on breath control")).toBeInTheDocument();
   });
 
   it("has no accessibility violations", async () => {

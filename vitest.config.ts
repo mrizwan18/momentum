@@ -20,6 +20,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // "server-only" unconditionally throws unless Next.js's own bundler
+      // resolves its "react-server" export condition — Vitest never does,
+      // so src/ai/*'s `import "server-only"` guards need a no-op shim here.
+      // The real Next.js production/client build never sees this alias.
+      "server-only": path.resolve(__dirname, "./tests/server-only-shim.ts"),
       "@": path.resolve(__dirname, "./apps/app/src"),
       "@momentum/ui": path.resolve(__dirname, "./packages/ui/src"),
       "@momentum/engine": path.resolve(__dirname, "./packages/engine/src"),

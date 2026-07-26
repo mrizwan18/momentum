@@ -5,6 +5,7 @@ import { Crossfade } from "@momentum/ui";
 import { useStorage } from "@/providers/storage-provider";
 import { useOnboardingFlow } from "./hooks/use-onboarding-flow";
 import { useBaselineRecording } from "./hooks/use-baseline-recording";
+import { useBaselineAssessment } from "./hooks/use-baseline-assessment";
 import { saveBaselineRecording } from "./services/baseline-service";
 import { SplashScreen } from "./components/SplashScreen";
 import { IntroPowerfulPractice } from "./components/IntroPowerfulPractice";
@@ -27,11 +28,17 @@ import { InitialAssessmentScreen } from "./components/InitialAssessmentScreen";
  * instance here, so both the Ready and Recording screens share one live
  * mic session instead of racing two independent ones.
  */
+/** Bounds how much longer "analyzing" waits for a real, still-in-flight AI response once its own cosmetic animation finishes. */
+const MAX_ANALYSIS_WAIT_MS = 5000;
+
 export function OnboardingView() {
   const { step, next, back } = useOnboardingFlow();
   const storage = useStorage();
   const recording = useBaselineRecording();
+  const baselineAssessment = useBaselineAssessment();
   const savedRef = React.useRef(false);
+  const recordingIdRef = React.useRef<string | null>(null);
+  const assessmentRunRef = React.useRef<Promise<void> | null>(null);
 
   // Once a take is captured — via the manual stop button or the 15s
   // auto-stop — save it as the baseline and move on to the upload
@@ -51,7 +58,10 @@ export function OnboardingView() {
       blob: recording.blob,
       durationMs: recording.durationMs,
     })
-      .then(next)
+      .then((saved) => {
+        recordingIdRef.current = saved.id;
+        next();
+      })
       .catch(next);
   }, [
     step,
@@ -67,6 +77,24 @@ export function OnboardingView() {
       savedRef.current = false;
     }
   }, [step]);
+
+  // The real AI Gateway call runs in the background as soon as "uploading"
+  // starts (in parallel with that screen's own cosmetic animation), so by
+  // the time "analyzing"'s animation finishes there's a good chance the
+  // real result is already in.
+  React.useEffect(() => {
+    if (
+      step !== "uploading" ||
+      !recordingIdRef.current ||
+      assessmentRunRef.current
+    ) {
+      return;
+    }
+    assessmentRunRef.current = baselineAssessment.run({
+      recordingId: recordingIdRef.current,
+      durationMs: recording.durationMs,
+    });
+  }, [step, recording.durationMs, baselineAssessment.run]);
 
   return (
     <Crossfade activeKey={step}>
@@ -111,10 +139,27 @@ export function OnboardingView() {
         <UploadingScreen onBack={back} onComplete={next} />
       ) : null}
       {step === "analyzing" ? (
-        <AnalyzingScreen onBack={back} onComplete={next} />
+        <AnalyzingScreen
+          onBack={back}
+          onComplete={async () => {
+            // The animation itself is done, but give the real (already
+            // in-flight) AI response a bounded extra moment to land before
+            // moving on, so Result can show real numbers whenever possible.
+            const timeout = new Promise<void>((resolve) =>
+              setTimeout(resolve, MAX_ANALYSIS_WAIT_MS),
+            );
+            await Promise.race([
+              assessmentRunRef.current ?? Promise.resolve(),
+              timeout,
+            ]);
+            next();
+          }}
+        />
       ) : null}
       {step === "result" ? (
         <InitialAssessmentScreen
+          assessment={baselineAssessment.assessment}
+          pending={baselineAssessment.status === "pending-offline"}
           onBack={back}
           onNext={() => {
             // Marks onboarding finished before the final `next()` navigates

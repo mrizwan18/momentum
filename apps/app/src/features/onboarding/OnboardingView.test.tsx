@@ -27,6 +27,31 @@ vi.mock("next/navigation", () => ({
 
 let storage: MomentumStorage;
 
+const assessmentResponseData = {
+  overallScore: 80,
+  metrics: {
+    pitchAccuracy: 80,
+    pitchStability: 80,
+    rhythm: 80,
+    breathControl: 80,
+    toneQuality: 80,
+    consistency: 80,
+    vocalRange: 80,
+    confidence: 80,
+    timing: 80,
+    voiceClarity: 80,
+    pronunciation: 80,
+    energy: 80,
+  },
+  strengths: ["Good tone"],
+  areasToImprove: ["Pitch"],
+  recommendedDailyPractice: "Scales",
+  recommendedDurationMinutes: 15,
+  suggestedSkillLevel: "beginner",
+  difficulty: "easy",
+  motivationalSummary: "Great start!",
+};
+
 describe("OnboardingView", () => {
   beforeEach(() => {
     push.mockClear();
@@ -34,10 +59,24 @@ describe("OnboardingView", () => {
       createMomentumDatabase(`test-onboarding-view-${Math.random()}`),
     );
     installMediaRecorderMock();
+    // Real network calls don't exist in this test environment — /api/ai/assessment
+    // is mocked so useBaselineAssessment resolves quickly and deterministically.
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({ data: assessmentResponseData, provider: "mock" }),
+            { status: 200 },
+          ),
+        ),
+    );
   });
 
   afterEach(async () => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
     uninstallMediaRecorderMock();
     await storage.db.delete();
   });
@@ -126,6 +165,10 @@ describe("OnboardingView", () => {
       ),
     ).toBeInTheDocument();
 
+    // The real (mocked) AI response has already settled by the time
+    // Analyzing hands off to Result, since onComplete awaits it.
+    expect(screen.getByText("80")).toBeInTheDocument();
+
     await user.click(
       screen.getByRole("button", { name: "Continue to Dashboard" }),
     );
@@ -138,6 +181,10 @@ describe("OnboardingView", () => {
     const recordings = await storage.recordings.list();
     expect(recordings).toHaveLength(1);
     expect(recordings[0].title).toBe("Baseline Recording");
+
+    const baseline = await storage.baselineAssessments.get();
+    expect(baseline?.overallScore).toBe(80);
+    expect(baseline?.recordingId).toBe(recordings[0].id);
   }, 20000);
 
   it("has no accessibility violations on the splash screen", async () => {

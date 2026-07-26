@@ -1,7 +1,11 @@
 import Dexie, { type EntityTable } from "dexie";
 import type {
   AchievementRecord,
+  AiSessionInsightRecord,
+  BaselineAssessmentRecord,
+  CoachMessageRecord,
   DailyGoalRecord,
+  DashboardInsightRecord,
   ExerciseAttemptRecord,
   ExerciseRecord,
   MilestoneRecord,
@@ -38,6 +42,12 @@ export class MomentumDatabase extends Dexie {
   milestones!: EntityTable<MilestoneRecord, "id">;
   dailyGoals!: EntityTable<DailyGoalRecord, "id">;
   recommendations!: EntityTable<RecommendationRecord, "id">;
+
+  // v7 (Sprint 9 — AI Intelligence Layer)
+  baselineAssessments!: EntityTable<BaselineAssessmentRecord, "id">;
+  aiSessionInsights!: EntityTable<AiSessionInsightRecord, "id">;
+  aiDashboardInsights!: EntityTable<DashboardInsightRecord, "id">;
+  coachMessages!: EntityTable<CoachMessageRecord, "id">;
 
   constructor(name = "momentum") {
     super(name);
@@ -216,6 +226,31 @@ export class MomentumDatabase extends Dexie {
             user.onboardingCompletedAt ??= null;
           });
       });
+
+    // Sprint 9 — AI Intelligence Layer: 4 brand-new tables, nothing to
+    // backfill on existing rows, so no .upgrade() is needed here.
+    this.version(7).stores({
+      settings: "id",
+      sessions: "id, status, startedAt, skillId, planId",
+      recordings: "id, sessionId, createdAt, exerciseAttemptId",
+      statistics: "id, date",
+      roadmap: "id, order, status",
+      users: "id",
+      skills: "id, slug, isActive",
+      exercises: "id, skillId, category, order",
+      practicePlans: "id, skillId, isRecoveryPlan",
+      exerciseAttempts: "id, sessionId, exerciseId, status, createdAt",
+      sessionSummaries: "id, sessionId",
+      streaks: "id, skillId",
+      achievements: "id, key, status",
+      milestones: "id, type, achieved",
+      dailyGoals: "id, date, completed",
+      recommendations: "id, category, priority, createdAt",
+      baselineAssessments: "id, recordingId, createdAt",
+      aiSessionInsights: "id, sessionId, createdAt",
+      aiDashboardInsights: "id, date, generatedAt",
+      coachMessages: "id, role, createdAt",
+    });
   }
 }
 

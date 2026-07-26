@@ -19,6 +19,10 @@ export * from "./repositories/achievement-repository";
 export * from "./repositories/milestone-repository";
 export * from "./repositories/daily-goal-repository";
 export * from "./repositories/recommendation-repository";
+export * from "./repositories/baseline-assessment-repository";
+export * from "./repositories/ai-session-insight-repository";
+export * from "./repositories/ai-dashboard-insight-repository";
+export * from "./repositories/coach-message-repository";
 
 import { createMomentumDatabase, type MomentumDatabase } from "./db";
 import {
@@ -85,6 +89,22 @@ import {
   createRecommendationRepository,
   type RecommendationRepository,
 } from "./repositories/recommendation-repository";
+import {
+  createBaselineAssessmentRepository,
+  type BaselineAssessmentRepository,
+} from "./repositories/baseline-assessment-repository";
+import {
+  createAiSessionInsightRepository,
+  type AiSessionInsightRepository,
+} from "./repositories/ai-session-insight-repository";
+import {
+  createAiDashboardInsightRepository,
+  type AiDashboardInsightRepository,
+} from "./repositories/ai-dashboard-insight-repository";
+import {
+  createCoachMessageRepository,
+  type CoachMessageRepository,
+} from "./repositories/coach-message-repository";
 
 export interface MomentumStorage {
   db: MomentumDatabase;
@@ -104,6 +124,10 @@ export interface MomentumStorage {
   milestones: MilestoneRepository;
   dailyGoals: DailyGoalRepository;
   recommendations: RecommendationRepository;
+  baselineAssessments: BaselineAssessmentRepository;
+  aiSessionInsights: AiSessionInsightRepository;
+  aiDashboardInsights: AiDashboardInsightRepository;
+  coachMessages: CoachMessageRepository;
 }
 
 /**
@@ -131,5 +155,9 @@ export function createMomentumStorage(
     milestones: createMilestoneRepository(db),
     dailyGoals: createDailyGoalRepository(db),
     recommendations: createRecommendationRepository(db),
+    baselineAssessments: createBaselineAssessmentRepository(db),
+    aiSessionInsights: createAiSessionInsightRepository(db),
+    aiDashboardInsights: createAiDashboardInsightRepository(db),
+    coachMessages: createCoachMessageRepository(db),
   };
 }

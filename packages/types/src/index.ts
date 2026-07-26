@@ -15,3 +15,4 @@ export * from "./daily-goal";
 export * from "./statistics";
 export * from "./recommendation";
 export * from "./roadmap";
+export * from "./ai";

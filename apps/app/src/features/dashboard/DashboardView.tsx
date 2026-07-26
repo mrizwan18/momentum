@@ -8,7 +8,9 @@ import {
   SkeletonText,
 } from "@momentum/ui";
 import { useDashboardData } from "./hooks/use-dashboard-data";
+import { useDashboardInsight } from "./hooks/use-dashboard-insight";
 import { getPracticeStatus } from "./lib/streak";
+import { DashboardAiCard } from "./components/DashboardAiCard";
 import { DashboardBottomNav } from "./components/DashboardBottomNav";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { Greeting } from "./components/Greeting";
@@ -42,6 +44,7 @@ export function DashboardSkeleton() {
  */
 export function DashboardView() {
   const state = useDashboardData();
+  const aiInsight = useDashboardInsight();
 
   if (state.status === "loading") {
     return <DashboardSkeleton />;
@@ -63,6 +66,10 @@ export function DashboardView() {
           />
           <QuickPracticeRow />
           <StreakCard streak={streak} weeklyByDay={weeklyByDay} />
+          <DashboardAiCard
+            status={aiInsight.status}
+            insight={aiInsight.insight}
+          />
         </Reveal>
       </PageShell>
       <DashboardBottomNav />

@@ -289,3 +289,58 @@ describe("MomentumDatabase v5 -> v6 migration", () => {
     upgraded.close();
   });
 });
+
+describe("MomentumDatabase v6 -> v7 migration", () => {
+  const dbName = `test-migration-v6-${Math.random()}`;
+
+  afterEach(async () => {
+    await Dexie.delete(dbName);
+  });
+
+  it("adds the Sprint 9 AI tables without disturbing existing v6 data", async () => {
+    const legacy = new Dexie(dbName);
+    legacy.version(6).stores({
+      settings: "id",
+      sessions: "id, status, startedAt, skillId, planId",
+      recordings: "id, sessionId, createdAt, exerciseAttemptId",
+      statistics: "id, date",
+      roadmap: "id, order, status",
+      users: "id",
+      skills: "id, slug, isActive",
+      exercises: "id, skillId, category, order",
+      practicePlans: "id, skillId, isRecoveryPlan",
+      exerciseAttempts: "id, sessionId, exerciseId, status, createdAt",
+      sessionSummaries: "id, sessionId",
+      streaks: "id, skillId",
+      achievements: "id, key, status",
+      milestones: "id, type, achieved",
+      dailyGoals: "id, date, completed",
+      recommendations: "id, category, priority, createdAt",
+    });
+    await legacy.open();
+    await legacy.table("users").add({
+      id: "local",
+      displayName: "Rizwan",
+      age: 24,
+      activeSkillId: null,
+      onboardingCompletedAt: 500,
+      createdAt: 1000,
+      updatedAt: 1000,
+    });
+    legacy.close();
+
+    const upgraded = new MomentumDatabase(dbName);
+    await upgraded.open();
+
+    const user = await upgraded.users.get("local");
+    expect(user?.displayName).toBe("Rizwan");
+    expect(user?.onboardingCompletedAt).toBe(500);
+
+    expect(
+      await upgraded.baselineAssessments.toCollection().first(),
+    ).toBeUndefined();
+    expect(await upgraded.coachMessages.toArray()).toEqual([]);
+
+    upgraded.close();
+  });
+});

@@ -11,3 +11,7 @@ export * from "./achievement-factory";
 export * from "./milestone-factory";
 export * from "./daily-goal-factory";
 export * from "./recommendation-factory";
+export * from "./baseline-assessment-factory";
+export * from "./ai-session-insight-factory";
+export * from "./ai-dashboard-insight-factory";
+export * from "./coach-message-factory";
