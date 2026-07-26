@@ -12,6 +12,7 @@ function fakeRecording(): RecordingRecord {
     id: "rec-1",
     sessionId: "session-1",
     exerciseAttemptId: null,
+    exerciseId: null,
     createdAt: 0,
     durationMs: 5000,
     mimeType: "audio/webm",

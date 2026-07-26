@@ -12,7 +12,7 @@ import {
   SkeletonGroup,
   SkeletonText,
 } from "@momentum/ui";
-import { SessionSummaryScreen, useSessionInsight } from "@/features/summary";
+import { SessionSummaryScreen } from "@/features/summary";
 import { usePracticeSession } from "./hooks/use-practice-session";
 import { ActivePracticeScreen } from "./components/ActivePracticeScreen";
 import { ExitConfirmDialog } from "./components/ExitConfirmDialog";
@@ -43,26 +43,6 @@ export function PracticeSkeleton() {
 export function PracticeView() {
   const session = usePracticeSession();
   const [exitDialogOpen, setExitDialogOpen] = React.useState(false);
-  const sessionInsight = useSessionInsight();
-  const insightRunRef = React.useRef<string | null>(null);
-
-  // The real AI Gateway call runs in the background as soon as the session
-  // machine reaches "completed" — SessionSummaryScreen renders immediately
-  // with the deterministic summary and progressively shows the AI insight
-  // once it lands, rather than blocking on it (Sprint 9 "Practice Session
-  // AI").
-  React.useEffect(() => {
-    if (session.machine.status !== "completed") return;
-    const { session: finished, summary } = session.machine;
-    if (insightRunRef.current === finished.id) return;
-    insightRunRef.current = finished.id;
-    void sessionInsight.run({
-      sessionId: finished.id,
-      elapsedSeconds: finished.elapsedSeconds,
-      exercisesCompleted: summary.exercisesCompleted,
-      dailyScore: summary.dailyScore,
-    });
-  }, [session.machine, sessionInsight.run]);
 
   if (session.catalogState === "loading") {
     return <PracticeSkeleton />;
@@ -157,11 +137,7 @@ export function PracticeView() {
       ) : null}
 
       {machine.status === "completed" ? (
-        <SessionSummaryScreen
-          summary={machine.summary}
-          aiInsight={sessionInsight.insight}
-          aiInsightStatus={sessionInsight.status}
-        />
+        <SessionSummaryScreen summary={machine.summary} />
       ) : null}
 
       {machine.status === "cancelled" ? <PracticeEnded /> : null}

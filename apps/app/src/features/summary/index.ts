@@ -1,10 +1,9 @@
 export * from "./services/summary-service";
 export { SessionSummaryScreen } from "./components/SessionSummaryScreen";
 export type { SessionSummaryScreenProps } from "./components/SessionSummaryScreen";
-export { useSessionInsight } from "./hooks/use-session-insight";
+export { useSessionAudioAnalysis } from "./hooks/use-session-audio-analysis";
 export type {
-  SessionInsightStatus,
-  RunSessionInsightInput,
-  UseSessionInsightResult,
-} from "./hooks/use-session-insight";
-export { usePendingSessionInsights } from "./hooks/use-pending-session-insights";
+  SessionAudioAnalysisStatus,
+  SessionAudioAnalysisSessionInput,
+  UseSessionAudioAnalysisResult,
+} from "./hooks/use-session-audio-analysis";

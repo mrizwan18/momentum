@@ -20,8 +20,13 @@ function wrapper({ children }: { children: React.ReactNode }) {
   return <StorageProvider value={storage}>{children}</StorageProvider>;
 }
 
-function renderSession(sessionId = "session-1") {
-  return renderHook(() => useRecordingSession({ sessionId }), { wrapper });
+function renderSession(
+  sessionId = "session-1",
+  exerciseId: string | null = null,
+) {
+  return renderHook(() => useRecordingSession({ sessionId, exerciseId }), {
+    wrapper,
+  });
 }
 
 /** Drives ready -> countdown -> recording, leaving fake timers installed. */
@@ -187,6 +192,26 @@ describe("useRecordingSession", () => {
     await expect(
       storage.recordings.listBySession("session-42"),
     ).resolves.toHaveLength(1);
+  });
+
+  it("tags the saved recording with the current exerciseId", async () => {
+    const { result } = renderSession("session-42", "exercise-alaap");
+    await grantAndRecord(result);
+
+    await act(async () => {
+      await result.current.stop();
+    });
+
+    vi.useRealTimers();
+    await act(async () => {
+      await result.current.save();
+    });
+
+    if (result.current.machine.status === "saved") {
+      expect(result.current.machine.recording.exerciseId).toBe(
+        "exercise-alaap",
+      );
+    }
   });
 
   it("discarding while recording never persists a repository row", async () => {

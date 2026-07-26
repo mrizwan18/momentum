@@ -66,6 +66,59 @@ describe("POST /api/ai/assessment", () => {
     );
   });
 
+  it("forwards a valid audio array to the gateway", async () => {
+    generateAssessment.mockResolvedValue({
+      data: { overallScore: 72 },
+      provider: "openai",
+      fallback: false,
+      cached: false,
+      generatedAt: 123,
+    });
+
+    await POST(
+      makeRequest({
+        context: emptyContext,
+        recordingId: "recording-1",
+        recordingDurationMs: 12000,
+        audio: [
+          {
+            base64: "abc",
+            format: "wav",
+            durationSeconds: 12,
+            truncated: false,
+          },
+        ],
+      }),
+    );
+
+    expect(generateAssessment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audio: [expect.objectContaining({ base64: "abc", format: "wav" })],
+      }),
+      "recording-1",
+    );
+  });
+
+  it("rejects an audio entry with an unsupported format", async () => {
+    const response = await POST(
+      makeRequest({
+        context: emptyContext,
+        recordingId: "recording-1",
+        recordingDurationMs: 12000,
+        audio: [
+          {
+            base64: "abc",
+            format: "mp3",
+            durationSeconds: 12,
+            truncated: false,
+          },
+        ],
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(generateAssessment).not.toHaveBeenCalled();
+  });
+
   it("rejects an invalid body", async () => {
     const response = await POST(makeRequest({ context: emptyContext }));
     expect(response.status).toBe(400);

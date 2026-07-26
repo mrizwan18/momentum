@@ -1,12 +1,28 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import type {
   AiSessionInsightRecord,
   PracticeSessionRecord,
 } from "@momentum/types";
 import type { SessionSummaryView } from "../services/summary-service";
+import type { SessionAudioAnalysisStatus } from "../hooks/use-session-audio-analysis";
 import { SessionSummaryScreen } from "./SessionSummaryScreen";
+
+const analyzeMock = vi.fn();
+let mockAnalysisState: {
+  status: SessionAudioAnalysisStatus;
+  insight: AiSessionInsightRecord | null;
+  errorMessage: string | null;
+} = { status: "no-recordings", insight: null, errorMessage: null };
+
+vi.mock("../hooks/use-session-audio-analysis", () => ({
+  useSessionAudioAnalysis: () => ({
+    ...mockAnalysisState,
+    analyze: analyzeMock,
+  }),
+}));
 
 const aiInsight: AiSessionInsightRecord = {
   id: "session-1",
@@ -77,6 +93,15 @@ function makeSummary(
 }
 
 describe("SessionSummaryScreen", () => {
+  beforeEach(() => {
+    analyzeMock.mockClear();
+    mockAnalysisState = {
+      status: "no-recordings",
+      insight: null,
+      errorMessage: null,
+    };
+  });
+
   afterEach(() => {
     // @ts-expect-error -- test-only cleanup of a property we defined below
     delete navigator.vibrate;
@@ -184,44 +209,79 @@ describe("SessionSummaryScreen", () => {
     expect(vibrate).toHaveBeenCalled();
   });
 
-  it("does not render an AI Coach Insight card when no AI status is provided", () => {
+  it("does not render an AI Coach Insight card when there's nothing to analyze", () => {
+    mockAnalysisState = {
+      status: "no-recordings",
+      insight: null,
+      errorMessage: null,
+    };
     render(<SessionSummaryScreen summary={makeSummary()} />);
     expect(screen.queryByText("AI Coach Insight")).not.toBeInTheDocument();
   });
 
-  it("shows a reviewing message while the AI insight is running", () => {
-    render(
-      <SessionSummaryScreen
-        summary={makeSummary()}
-        aiInsightStatus="running"
-        aiInsight={null}
-      />,
-    );
+  it("shows an opt-in Analyze with AI button when recordings exist", () => {
+    mockAnalysisState = { status: "idle", insight: null, errorMessage: null };
+    render(<SessionSummaryScreen summary={makeSummary()} />);
     expect(screen.getByText("AI Coach Insight")).toBeInTheDocument();
     expect(
-      screen.getByText("Your AI coach is reviewing this session…"),
+      screen.getByRole("button", { name: "Analyze with AI" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/sent to OpenAI/)).toBeInTheDocument();
+  });
+
+  it("calls analyze() when the button is tapped, and never fires automatically", async () => {
+    mockAnalysisState = { status: "idle", insight: null, errorMessage: null };
+    render(<SessionSummaryScreen summary={makeSummary()} />);
+
+    expect(analyzeMock).not.toHaveBeenCalled();
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Analyze with AI" }));
+    expect(analyzeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a preparing message while encoding", () => {
+    mockAnalysisState = {
+      status: "encoding",
+      insight: null,
+      errorMessage: null,
+    };
+    render(<SessionSummaryScreen summary={makeSummary()} />);
+    expect(screen.getByText("Preparing your recordings…")).toBeInTheDocument();
+  });
+
+  it("shows an analyzing message while the request is in flight", () => {
+    mockAnalysisState = {
+      status: "analyzing",
+      insight: null,
+      errorMessage: null,
+    };
+    render(<SessionSummaryScreen summary={makeSummary()} />);
+    expect(screen.getByText("Analyzing your recordings…")).toBeInTheDocument();
+  });
+
+  it("shows an error with a retry action when the request fails", () => {
+    mockAnalysisState = {
+      status: "error",
+      insight: null,
+      errorMessage: "Couldn't reach the AI service.",
+    };
+    render(<SessionSummaryScreen summary={makeSummary()} />);
+    expect(
+      screen.getByText("Couldn't reach the AI service."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Try again" }),
     ).toBeInTheDocument();
   });
 
-  it("shows an offline message when the AI insight is pending", () => {
-    render(
-      <SessionSummaryScreen
-        summary={makeSummary()}
-        aiInsightStatus="pending-offline"
-        aiInsight={null}
-      />,
-    );
-    expect(screen.getByText(/back online/)).toBeInTheDocument();
-  });
-
   it("shows the real AI insight once ready", () => {
-    render(
-      <SessionSummaryScreen
-        summary={makeSummary()}
-        aiInsightStatus="ready"
-        aiInsight={aiInsight}
-      />,
-    );
+    mockAnalysisState = {
+      status: "ready",
+      insight: aiInsight,
+      errorMessage: null,
+    };
+    render(<SessionSummaryScreen summary={makeSummary()} />);
     expect(screen.getByText("Great focus today!")).toBeInTheDocument();
     expect(screen.getByText(/Breath support/)).toBeInTheDocument();
     expect(screen.getByText(/Pitch on high notes/)).toBeInTheDocument();

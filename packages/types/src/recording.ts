@@ -23,6 +23,13 @@ export const RecordingSchema = z.object({
   sessionId: z.string().nullable(),
   /** Links this recording back to the specific exercise attempt that produced it. */
   exerciseAttemptId: z.string().nullable(),
+  /**
+   * Which exercise this take was recorded for — set at record time (unlike
+   * exerciseAttemptId, which can't be, since the attempt record isn't
+   * created until the exercise is later completed). Used to give the AI
+   * audio-analysis prompt real per-exercise context.
+   */
+  exerciseId: z.string().nullable(),
   createdAt: z.number(),
   durationMs: z.number().min(0),
   mimeType: z.string().min(1),

@@ -10,6 +10,8 @@ import { RecordingReview } from "./RecordingReview";
 export interface RecordPanelProps {
   /** The active PracticeSession a saved recording associates with. */
   sessionId: string;
+  /** The exercise currently being practiced — tags the saved recording so AI audio analysis can label it. */
+  exerciseId: string | null;
 }
 
 /**
@@ -20,8 +22,8 @@ export interface RecordPanelProps {
  * pass-through to useRecordingSession. Renders bare (no Card of its own) —
  * it's always embedded inside ExerciseCard's own card.
  */
-export function RecordPanel({ sessionId }: RecordPanelProps) {
-  const session = useRecordingSession({ sessionId });
+export function RecordPanel({ sessionId, exerciseId }: RecordPanelProps) {
+  const session = useRecordingSession({ sessionId, exerciseId });
   const { machine } = session;
 
   return (

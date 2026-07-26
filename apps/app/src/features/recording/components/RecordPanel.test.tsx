@@ -18,10 +18,13 @@ import { RecordPanel } from "./RecordPanel";
 let storage: MomentumStorage;
 let mock: MediaRecorderMockHandle;
 
-function renderPanel(sessionId = "session-1") {
+function renderPanel(
+  sessionId = "session-1",
+  exerciseId: string | null = null,
+) {
   return render(
     <StorageProvider value={storage}>
-      <RecordPanel sessionId={sessionId} />
+      <RecordPanel sessionId={sessionId} exerciseId={exerciseId} />
     </StorageProvider>,
   );
 }

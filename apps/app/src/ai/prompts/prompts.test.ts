@@ -57,6 +57,52 @@ describe("buildSessionSummaryPrompt", () => {
     });
     expect(prompt).not.toContain("daily score");
   });
+
+  it("says no audio is attached when the user hasn't opted in to analysis", () => {
+    const prompt = buildSessionSummaryPrompt({
+      context: emptyContext(),
+      session: {
+        sessionId: "s1",
+        elapsedSeconds: 60,
+        exercisesCompleted: 1,
+        dailyScore: null,
+      },
+    });
+    expect(prompt).toContain("No audio is attached");
+  });
+
+  it("labels every recording by its exercise and notes truncation, when audio is attached", () => {
+    const prompt = buildSessionSummaryPrompt({
+      context: emptyContext(),
+      session: {
+        sessionId: "s1",
+        elapsedSeconds: 600,
+        exercisesCompleted: 2,
+        dailyScore: 80,
+      },
+      audio: [
+        {
+          base64: "a",
+          format: "wav",
+          durationSeconds: 30,
+          truncated: false,
+          exerciseLabel: "Alaap — Pitch Accuracy",
+        },
+        {
+          base64: "b",
+          format: "wav",
+          durationSeconds: 60,
+          truncated: true,
+          exerciseLabel: "Taan — Rhythm",
+        },
+      ],
+    });
+    expect(prompt).toContain("2 real recording(s)");
+    expect(prompt).toContain("Recording 1 — Exercise: Alaap — Pitch Accuracy");
+    expect(prompt).toContain("Recording 2 — Exercise: Taan — Rhythm");
+    expect(prompt).toContain("audio truncated to the first minute");
+    expect(prompt).toContain("ONE cohesive session summary");
+  });
 });
 
 describe("buildDashboardInsightPrompt", () => {

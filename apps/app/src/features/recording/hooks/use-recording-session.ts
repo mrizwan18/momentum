@@ -32,6 +32,8 @@ function toErrorMessage(error: unknown): string {
 export interface UseRecordingSessionOptions {
   /** The active PracticeSession a saved recording should associate with. */
   sessionId: string;
+  /** Which exercise is currently active — saved recordings are tagged with it so AI audio analysis can label each take with real exercise context. */
+  exerciseId: string | null;
 }
 
 export interface UseRecordingSessionResult {
@@ -70,7 +72,7 @@ export function useRecordingSession(
   options: UseRecordingSessionOptions,
 ): UseRecordingSessionResult {
   const storage = useStorage();
-  const { sessionId } = options;
+  const { sessionId, exerciseId } = options;
 
   const [machine, dispatch] = React.useReducer(
     transition,
@@ -328,6 +330,7 @@ export function useRecordingSession(
       try {
         const recording = await saveRecording(storage, {
           sessionId,
+          exerciseId,
           blob,
           mimeType: blob.type,
           durationMs,
@@ -338,7 +341,7 @@ export function useRecordingSession(
         dispatch({ type: "SAVE_ERROR", message: toErrorMessage(error) });
       }
     });
-  }, [machine, runUserAction, sessionId, storage]);
+  }, [machine, runUserAction, sessionId, exerciseId, storage]);
 
   const reset = React.useCallback(async () => {
     if (machine.status !== "saved" && machine.status !== "error") return;

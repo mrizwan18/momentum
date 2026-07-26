@@ -68,6 +68,39 @@ describe("POST /api/ai/session-summary", () => {
     );
   });
 
+  it("forwards a valid audio array, each labeled by exercise, to the gateway", async () => {
+    generateSessionSummary.mockResolvedValue({
+      data: { bestMoment: "The song" },
+      provider: "openai",
+      fallback: false,
+      cached: false,
+      generatedAt: 123,
+    });
+
+    await POST(
+      makeRequest({
+        context: emptyContext,
+        session,
+        audio: [
+          {
+            base64: "abc",
+            format: "wav",
+            durationSeconds: 30,
+            truncated: false,
+            exerciseLabel: "Alaap",
+          },
+        ],
+      }),
+    );
+
+    expect(generateSessionSummary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audio: [expect.objectContaining({ exerciseLabel: "Alaap" })],
+      }),
+      "session-1",
+    );
+  });
+
   it("rejects an invalid body", async () => {
     const response = await POST(makeRequest({ context: emptyContext }));
     expect(response.status).toBe(400);

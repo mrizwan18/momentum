@@ -4,6 +4,10 @@ import * as React from "react";
 import type { BaselineAssessmentRecord } from "@momentum/types";
 import { useStorage } from "@/providers/storage-provider";
 import { assembleAiContext } from "@/ai/services";
+import { encodeRecordingForAnalysis } from "@/lib/audio/encode-recording";
+
+/** Well under the baseline recording's own 15s auto-stop cap, so truncation never actually triggers here. */
+const MAX_AUDIO_DURATION_SECONDS = 60;
 
 export type BaselineAssessmentStatus =
   "idle" | "running" | "ready" | "pending-offline";
@@ -37,6 +41,19 @@ export function useBaselineAssessment(): UseBaselineAssessmentResult {
       const promise = (async () => {
         try {
           const context = await assembleAiContext(storage);
+
+          // Genuinely analyze the real recording when possible — a failed
+          // encode (unsupported browser API, corrupt blob) just falls back
+          // to the existing context-only request rather than blocking
+          // onboarding.
+          const recording = await storage.recordings.get(input.recordingId);
+          const encoded = recording
+            ? await encodeRecordingForAnalysis(
+                recording.blob,
+                MAX_AUDIO_DURATION_SECONDS,
+              )
+            : null;
+
           const response = await fetch("/api/ai/assessment", {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -44,6 +61,7 @@ export function useBaselineAssessment(): UseBaselineAssessmentResult {
               context,
               recordingId: input.recordingId,
               recordingDurationMs: input.durationMs,
+              audio: encoded ? [encoded] : undefined,
             }),
           });
           if (!response.ok) {

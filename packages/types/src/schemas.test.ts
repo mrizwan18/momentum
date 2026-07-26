@@ -60,6 +60,7 @@ describe("RecordingSchema", () => {
     id: "rec-1",
     sessionId: null,
     exerciseAttemptId: null,
+    exerciseId: null,
     createdAt: 0,
     durationMs: 1000,
     mimeType: "audio/webm",

@@ -31,6 +31,7 @@ describe("recording-persistence-service", () => {
   it("saves a recording through the repository pattern", async () => {
     const recording = await saveRecording(storage, {
       sessionId: "session-1",
+      exerciseId: null,
       blob: fakeAudioBlob(),
       mimeType: "audio/webm",
       durationMs: 4200,
@@ -45,9 +46,23 @@ describe("recording-persistence-service", () => {
     );
   });
 
+  it("tags a recording with the exercise it was made for", async () => {
+    const recording = await saveRecording(storage, {
+      sessionId: "session-1",
+      exerciseId: "exercise-alaap",
+      blob: fakeAudioBlob(),
+      mimeType: "audio/webm",
+      durationMs: 1000,
+      title: "Take 1",
+    });
+
+    expect(recording.exerciseId).toBe("exercise-alaap");
+  });
+
   it("renames a saved recording", async () => {
     const recording = await saveRecording(storage, {
       sessionId: null,
+      exerciseId: null,
       blob: fakeAudioBlob(),
       mimeType: "audio/webm",
       durationMs: 1000,
@@ -65,6 +80,7 @@ describe("recording-persistence-service", () => {
   it("deletes a recording", async () => {
     const recording = await saveRecording(storage, {
       sessionId: null,
+      exerciseId: null,
       blob: fakeAudioBlob(),
       mimeType: "audio/webm",
       durationMs: 1000,
@@ -78,6 +94,7 @@ describe("recording-persistence-service", () => {
   it("lists only recordings for the given session", async () => {
     const inSession = await saveRecording(storage, {
       sessionId: "session-a",
+      exerciseId: null,
       blob: fakeAudioBlob(),
       mimeType: "audio/webm",
       durationMs: 1000,
@@ -85,6 +102,7 @@ describe("recording-persistence-service", () => {
     });
     await saveRecording(storage, {
       sessionId: "session-b",
+      exerciseId: null,
       blob: fakeAudioBlob(),
       mimeType: "audio/webm",
       durationMs: 1000,

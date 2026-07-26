@@ -3,6 +3,8 @@ import type { RecordingRecord } from "@momentum/types";
 
 export interface SaveRecordingInput {
   sessionId: string | null;
+  /** Which exercise this take was recorded for — lets AI audio analysis label each recording with real exercise context. */
+  exerciseId: string | null;
   blob: Blob;
   mimeType: string;
   durationMs: number;
@@ -16,6 +18,7 @@ export async function saveRecording(
 ): Promise<RecordingRecord> {
   return storage.recordings.create({
     sessionId: input.sessionId,
+    exerciseId: input.exerciseId,
     durationMs: input.durationMs,
     mimeType: input.mimeType,
     blob: input.blob,

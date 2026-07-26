@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AiUserContext } from "../schemas/ai-user-context";
+import type { AiAudioPart } from "../types";
 import {
   describeContext,
   JSON_ONLY_INSTRUCTION,
@@ -10,26 +11,34 @@ import {
 export interface AssessmentPromptInput {
   context: AiUserContext;
   recordingDurationMs: number;
+  /** The real baseline recording, when client-side audio encoding succeeded. */
+  audio?: AiAudioPart[];
 }
 
 /**
- * Sprint 9 "AI During Onboarding". Note: this prompt frames the assessment
- * around the user's stated profile/context, not a literal acoustic analysis
- * of the recording — real pitch/rhythm signal-processing is a separate
- * discipline outside this sprint's Gateway/provider architecture (see the
- * completion report's Future Extension Points).
+ * Sprint 9 "AI During Onboarding", extended to genuinely analyze real
+ * audio when it's attached (see openai-provider.ts's chatJsonWithAudio) —
+ * only the OpenAI provider actually receives the audio bytes; other
+ * providers fall back to context-only inference regardless of this prompt's
+ * wording, since they never see the `audio` field at all.
  */
 export function buildAssessmentPrompt({
   context,
   recordingDurationMs,
+  audio,
 }: AssessmentPromptInput): string {
+  const hasAudio = Boolean(audio && audio.length > 0);
+  const listeningInstruction = hasAudio
+    ? "You have been given the user's actual recorded audio below — listen to it and evaluate real pitch accuracy, tone, rhythm, breath control, and the other metrics from what you actually hear. Do not estimate from context alone."
+    : "No audio is attached to this request — evaluate as best you can from the context below, and keep scores conservative rather than overconfident.";
+
   return `You are Momentum's vocal coach AI, producing an Initial Vocal Assessment from a new user's first baseline recording (${Math.round(recordingDurationMs / 1000)} seconds long).
 
 ${TONE_GUIDANCE}
 
 ${describeContext(context)}
 
-This is the user's very first recording — there is no prior history to compare against. Evaluate across these 12 metrics (each 0-100): pitchAccuracy, pitchStability, rhythm, breathControl, toneQuality, consistency, vocalRange, confidence, timing, voiceClarity, pronunciation, energy.
+This is the user's very first recording — there is no prior history to compare against. ${listeningInstruction} Evaluate across these 12 metrics (each 0-100): pitchAccuracy, pitchStability, rhythm, breathControl, toneQuality, consistency, vocalRange, confidence, timing, voiceClarity, pronunciation, energy.
 
 ${JSON_ONLY_INSTRUCTION}
 {

@@ -28,6 +28,22 @@ describe("recordings repository", () => {
 
     expect(recording.favorite).toBe(false);
     expect(recording.notes).toBeNull();
+    expect(recording.exerciseId).toBeNull();
+  });
+
+  it("round-trips the exerciseId a recording was made for", async () => {
+    const repo = createRecordingsRepository(db);
+    const recording = await repo.create({
+      sessionId: "session-1",
+      exerciseId: "exercise-alaap",
+      durationMs: 5000,
+      mimeType: "audio/webm",
+      blob: fakeAudioBlob(),
+    });
+
+    expect(recording.exerciseId).toBe("exercise-alaap");
+    const fetched = await repo.get(recording.id);
+    expect(fetched?.exerciseId).toBe("exercise-alaap");
   });
 
   it("lists recordings newest first", async () => {

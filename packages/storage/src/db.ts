@@ -251,6 +251,43 @@ export class MomentumDatabase extends Dexie {
       aiDashboardInsights: "id, date, generatedAt",
       coachMessages: "id, role, createdAt",
     });
+
+    // Real audio AI analysis: recordings now remember which exercise they
+    // were made for (set at record time, unlike exerciseAttemptId which
+    // can't be — the attempt record doesn't exist until the exercise is
+    // later completed), so a session's AI analysis can label each
+    // recording with real exercise context.
+    this.version(8)
+      .stores({
+        settings: "id",
+        sessions: "id, status, startedAt, skillId, planId",
+        recordings: "id, sessionId, createdAt, exerciseAttemptId",
+        statistics: "id, date",
+        roadmap: "id, order, status",
+        users: "id",
+        skills: "id, slug, isActive",
+        exercises: "id, skillId, category, order",
+        practicePlans: "id, skillId, isRecoveryPlan",
+        exerciseAttempts: "id, sessionId, exerciseId, status, createdAt",
+        sessionSummaries: "id, sessionId",
+        streaks: "id, skillId",
+        achievements: "id, key, status",
+        milestones: "id, type, achieved",
+        dailyGoals: "id, date, completed",
+        recommendations: "id, category, priority, createdAt",
+        baselineAssessments: "id, recordingId, createdAt",
+        aiSessionInsights: "id, sessionId, createdAt",
+        aiDashboardInsights: "id, date, generatedAt",
+        coachMessages: "id, role, createdAt",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("recordings")
+          .toCollection()
+          .modify((recording) => {
+            recording.exerciseId ??= null;
+          });
+      });
   }
 }
 

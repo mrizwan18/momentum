@@ -344,3 +344,63 @@ describe("MomentumDatabase v6 -> v7 migration", () => {
     upgraded.close();
   });
 });
+
+describe("MomentumDatabase v7 -> v8 migration", () => {
+  const dbName = `test-migration-v7-${Math.random()}`;
+
+  afterEach(async () => {
+    await Dexie.delete(dbName);
+  });
+
+  it("backfills exerciseId on recordings predating per-exercise AI analysis", async () => {
+    const legacy = new Dexie(dbName);
+    legacy.version(7).stores({
+      settings: "id",
+      sessions: "id, status, startedAt, skillId, planId",
+      recordings: "id, sessionId, createdAt, exerciseAttemptId",
+      statistics: "id, date",
+      roadmap: "id, order, status",
+      users: "id",
+      skills: "id, slug, isActive",
+      exercises: "id, skillId, category, order",
+      practicePlans: "id, skillId, isRecoveryPlan",
+      exerciseAttempts: "id, sessionId, exerciseId, status, createdAt",
+      sessionSummaries: "id, sessionId",
+      streaks: "id, skillId",
+      achievements: "id, key, status",
+      milestones: "id, type, achieved",
+      dailyGoals: "id, date, completed",
+      recommendations: "id, category, priority, createdAt",
+      baselineAssessments: "id, recordingId, createdAt",
+      aiSessionInsights: "id, sessionId, createdAt",
+      aiDashboardInsights: "id, date, generatedAt",
+      coachMessages: "id, role, createdAt",
+    });
+    await legacy.open();
+    await legacy.table("recordings").add({
+      id: "v7-recording",
+      sessionId: "session-1",
+      exerciseAttemptId: null,
+      createdAt: 1000,
+      durationMs: 3000,
+      mimeType: "audio/webm",
+      blob: new Blob(["v7-audio"], { type: "audio/webm" }),
+      favorite: false,
+      title: null,
+      notes: null,
+    });
+    legacy.close();
+
+    const upgraded = new MomentumDatabase(dbName);
+    await upgraded.open();
+
+    const recording = await upgraded.recordings.get("v7-recording");
+    expect(recording).toBeDefined();
+    expect(recording?.exerciseId).toBeNull();
+    // v7 fields must survive untouched.
+    expect(recording?.durationMs).toBe(3000);
+    expect(recording?.sessionId).toBe("session-1");
+
+    upgraded.close();
+  });
+});

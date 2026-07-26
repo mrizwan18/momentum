@@ -70,6 +70,26 @@ describe("buildAssessmentPrompt", () => {
     expect(prompt).toContain("ONLY valid JSON");
     expect(prompt).toContain("12 seconds");
   });
+
+  it("tells the model to estimate from context when no audio is attached", () => {
+    const prompt = buildAssessmentPrompt({
+      context: emptyContext(),
+      recordingDurationMs: 12000,
+    });
+    expect(prompt).toContain("No audio is attached");
+  });
+
+  it("instructs the model to genuinely listen when real audio is attached", () => {
+    const prompt = buildAssessmentPrompt({
+      context: emptyContext(),
+      recordingDurationMs: 12000,
+      audio: [
+        { base64: "abc", format: "wav", durationSeconds: 12, truncated: false },
+      ],
+    });
+    expect(prompt).toContain("actual recorded audio");
+    expect(prompt).not.toContain("No audio is attached");
+  });
 });
 
 describe("buildCoachPrompt", () => {

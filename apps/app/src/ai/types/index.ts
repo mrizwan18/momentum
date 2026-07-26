@@ -12,9 +12,27 @@ import type {
 
 export type { AiProviderName };
 
+/**
+ * Real recorded audio, converted client-side to a small WAV (see
+ * src/lib/audio/encode-recording.ts) and attached to an assessment/session
+ * request — only the OpenAI provider actually sends this to the model
+ * (gpt-4o-audio-preview); other providers ignore it.
+ */
+export interface AiAudioPart {
+  base64: string;
+  format: "wav";
+  durationSeconds: number;
+  /** True if the source recording was longer than the analysis cap and had to be cut down. */
+  truncated: boolean;
+  /** Category/title of the exercise this take was recorded for, if known — lets the model give exercise-specific feedback instead of a generic one. */
+  exerciseLabel?: string | null;
+}
+
 export interface GenerateAssessmentInput {
   context: AiUserContext;
   recordingDurationMs: number;
+  /** The real baseline recording, when client-side encoding succeeded — absent falls back to context-only inference. */
+  audio?: AiAudioPart[];
 }
 
 export interface GenerateSessionInsightInput {
@@ -25,6 +43,8 @@ export interface GenerateSessionInsightInput {
     exercisesCompleted: number;
     dailyScore: number | null;
   };
+  /** Every recording saved during this session, opt-in analyzed by the user — absent/empty falls back to context-only inference. */
+  audio?: AiAudioPart[];
 }
 
 export interface GenerateDashboardInsightInput {

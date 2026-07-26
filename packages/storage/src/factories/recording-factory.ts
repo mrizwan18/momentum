@@ -5,6 +5,7 @@ import { parseOrThrow } from "../validation";
 export interface CreateRecordingInput {
   sessionId?: string | null;
   exerciseAttemptId?: string | null;
+  exerciseId?: string | null;
   durationMs: number;
   mimeType: string;
   blob: Blob;
@@ -17,6 +18,7 @@ export function createRecording(input: CreateRecordingInput): RecordingRecord {
     id: generateId(),
     sessionId: input.sessionId ?? null,
     exerciseAttemptId: input.exerciseAttemptId ?? null,
+    exerciseId: input.exerciseId ?? null,
     createdAt: Date.now(),
     durationMs: input.durationMs,
     mimeType: input.mimeType,

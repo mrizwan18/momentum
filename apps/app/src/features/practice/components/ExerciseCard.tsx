@@ -182,7 +182,7 @@ export function ExerciseCard({
             </Stack>
 
             <div className="flex-1">
-              <RecordPanel sessionId={sessionId} />
+              <RecordPanel sessionId={sessionId} exerciseId={exercise.id} />
             </div>
 
             <Stack gap="xs" className="items-center">

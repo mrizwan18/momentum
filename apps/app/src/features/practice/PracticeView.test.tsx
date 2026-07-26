@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
@@ -12,29 +12,6 @@ import { useActiveSessionStore } from "@/stores/active-session-store";
 import { PracticeView } from "./PracticeView";
 
 let storage: MomentumStorage;
-
-const sessionInsightResponseData = {
-  whatImproved: ["Breath support"],
-  whatDeclined: [],
-  bestMoment: "The final scale run",
-  biggestOpportunity: "Warm up longer next time",
-  tomorrowsGoal: "Focus on breath control",
-  encouragingSentence: "Great focus today!",
-  metricsSnapshot: {
-    pitchAccuracy: 80,
-    pitchStability: 80,
-    rhythm: 80,
-    breathControl: 80,
-    toneQuality: 80,
-    consistency: 80,
-    vocalRange: 80,
-    confidence: 80,
-    timing: 80,
-    voiceClarity: 80,
-    pronunciation: 80,
-    energy: 80,
-  },
-};
 
 /** Lets next/link's own post-mount effects (e.g. prefetch observers) settle. */
 function flush() {
@@ -54,27 +31,9 @@ describe("PracticeView", () => {
     storage = createMomentumStorage(
       createMomentumDatabase(`test-practice-view-${Math.random()}`),
     );
-    // The Session Summary screen kicks off a real AI Gateway call in the
-    // background as soon as a session completes — mocked here so it
-    // resolves quickly and deterministically instead of hitting the network.
-    vi.stubGlobal(
-      "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(
-            JSON.stringify({
-              data: sessionInsightResponseData,
-              provider: "mock",
-            }),
-            { status: 200 },
-          ),
-        ),
-    );
   });
 
   afterEach(async () => {
-    vi.unstubAllGlobals();
     await storage.db.delete();
     useActiveSessionStore.setState({ activeSessionId: null });
     localStorage.clear();
@@ -150,12 +109,6 @@ describe("PracticeView", () => {
       completedSession.id,
     );
     expect(attempts).toHaveLength(7);
-
-    expect(await screen.findByText("Great focus today!")).toBeInTheDocument();
-    const insight = await storage.aiSessionInsights.getBySession(
-      completedSession.id,
-    );
-    expect(insight?.bestMoment).toBe("The final scale run");
     await flush();
   });
 

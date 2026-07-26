@@ -6,7 +6,12 @@ import {
   type MomentumStorage,
 } from "@momentum/storage";
 import { StorageProvider } from "@/providers/storage-provider";
+import { encodeRecordingForAnalysis } from "@/lib/audio/encode-recording";
 import { useBaselineAssessment } from "./use-baseline-assessment";
+
+vi.mock("@/lib/audio/encode-recording", () => ({
+  encodeRecordingForAnalysis: vi.fn(),
+}));
 
 let storage: MomentumStorage;
 
@@ -139,5 +144,83 @@ describe("useBaselineAssessment", () => {
 
     await waitFor(() => expect(result.current.status).toBe("ready"));
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("attaches the real encoded audio when the recording exists and encoding succeeds", async () => {
+    vi.mocked(encodeRecordingForAnalysis).mockResolvedValue({
+      base64: "ZmFrZQ==",
+      format: "wav",
+      durationSeconds: 12,
+      truncated: false,
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ data: assessmentResponseData, provider: "openai" }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const recording = await storage.recordings.create({
+      sessionId: null,
+      exerciseId: null,
+      durationMs: 15000,
+      mimeType: "audio/webm",
+      blob: new Blob(["fake-audio"], { type: "audio/webm" }),
+    });
+
+    const { result } = renderHook(() => useBaselineAssessment(), { wrapper });
+    await act(async () => {
+      await result.current.run({
+        recordingId: recording.id,
+        durationMs: 15000,
+      });
+    });
+
+    expect(result.current.status).toBe("ready");
+    const [, requestInit] = fetchMock.mock.calls[0];
+    const body = JSON.parse(requestInit.body);
+    expect(body.audio).toEqual([
+      {
+        base64: "ZmFrZQ==",
+        format: "wav",
+        durationSeconds: 12,
+        truncated: false,
+      },
+    ]);
+  });
+
+  it("falls back to a context-only request when encoding fails", async () => {
+    vi.mocked(encodeRecordingForAnalysis).mockResolvedValue(null);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ data: assessmentResponseData, provider: "mock" }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const recording = await storage.recordings.create({
+      sessionId: null,
+      exerciseId: null,
+      durationMs: 15000,
+      mimeType: "audio/webm",
+      blob: new Blob(["fake-audio"], { type: "audio/webm" }),
+    });
+
+    const { result } = renderHook(() => useBaselineAssessment(), { wrapper });
+    await act(async () => {
+      await result.current.run({
+        recordingId: recording.id,
+        durationMs: 15000,
+      });
+    });
+
+    expect(result.current.status).toBe("ready");
+    const [, requestInit] = fetchMock.mock.calls[0];
+    const body = JSON.parse(requestInit.body);
+    expect(body.audio).toBeUndefined();
   });
 });

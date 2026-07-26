@@ -1,13 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getDefaultAiGateway } from "@/ai/gateway";
-import { AiUserContextSchema } from "@/ai/schemas";
+import { AiAudioPartSchema, AiUserContextSchema } from "@/ai/schemas";
 import { respondWithGatewayResult } from "../shared";
 
 const BodySchema = z.object({
   context: AiUserContextSchema,
   recordingId: z.string().min(1),
   recordingDurationMs: z.number().nonnegative(),
+  /** The real baseline recording, when client-side audio encoding succeeded. */
+  audio: z.array(AiAudioPartSchema).optional(),
 });
 
 /** Sprint 9 "AI During Onboarding" — generates the Initial Vocal Assessment. */
@@ -26,6 +28,7 @@ export async function POST(request: NextRequest) {
       {
         context: parsed.data.context,
         recordingDurationMs: parsed.data.recordingDurationMs,
+        audio: parsed.data.audio,
       },
       parsed.data.recordingId,
     ),

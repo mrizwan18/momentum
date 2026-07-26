@@ -8,6 +8,7 @@ export interface RecordingSummaryDTO {
   id: string;
   sessionId: string | null;
   exerciseAttemptId: string | null;
+  exerciseId: string | null;
   createdAt: number;
   durationMs: number;
   mimeType: string;

@@ -24,18 +24,14 @@ import {
   Text,
   triggerHaptic,
 } from "@momentum/ui";
-import type { AiSessionInsightRecord } from "@momentum/types";
 import { NotificationOptInPrompt } from "@/components/NotificationOptInPrompt";
 import { toDateOnly } from "@/lib/date";
 import { formatDuration } from "@/lib/format-duration";
 import type { SessionSummaryView } from "../services/summary-service";
-import type { SessionInsightStatus } from "../hooks/use-session-insight";
+import { useSessionAudioAnalysis } from "../hooks/use-session-audio-analysis";
 
 export interface SessionSummaryScreenProps {
   summary: SessionSummaryView;
-  /** The real, AI-generated session insight — null until it's ready (or never, if offline). */
-  aiInsight?: AiSessionInsightRecord | null;
-  aiInsightStatus?: SessionInsightStatus;
 }
 
 interface StatTileProps {
@@ -67,11 +63,13 @@ function StatTile({ label, value, caption }: StatTileProps) {
  * Every number here comes from `buildSessionSummary`; nothing is fabricated
  * for effect.
  */
-export function SessionSummaryScreen({
-  summary,
-  aiInsight = null,
-  aiInsightStatus = "idle",
-}: SessionSummaryScreenProps) {
+export function SessionSummaryScreen({ summary }: SessionSummaryScreenProps) {
+  const analysis = useSessionAudioAnalysis(summary.session.id, {
+    elapsedSeconds: summary.session.elapsedSeconds,
+    exercisesCompleted: summary.exercisesCompleted,
+    dailyScore: summary.dailyScore,
+  });
+
   React.useEffect(() => {
     triggerHaptic("success");
   }, []);
@@ -210,7 +208,8 @@ export function SessionSummaryScreen({
         </Reveal>
       ) : null}
 
-      {aiInsightStatus !== "idle" ? (
+      {analysis.status === "no-recordings" ||
+      analysis.status === "loading" ? null : (
         <Reveal delay={0.4}>
           <Card>
             <CardHeader className="flex-row items-center gap-2">
@@ -218,35 +217,61 @@ export function SessionSummaryScreen({
               <CardTitle as="h2">AI Coach Insight</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              {aiInsightStatus === "running" ? (
-                <Text tone="muted" size="sm">
-                  Your AI coach is reviewing this session…
-                </Text>
-              ) : aiInsightStatus === "pending-offline" ? (
-                <Text tone="muted" size="sm">
-                  We&apos;ll add your AI insight once you&apos;re back online.
-                </Text>
-              ) : aiInsight ? (
+              {analysis.status === "idle" ? (
                 <>
-                  <Text size="sm">{aiInsight.encouragingSentence}</Text>
-                  {aiInsight.whatImproved.length > 0 ? (
+                  <Text tone="muted" size="sm">
+                    Get AI feedback on the recording(s) you made this session.
+                    Your recording will be sent to OpenAI for analysis.
+                  </Text>
+                  <Button
+                    onClick={() => void analysis.analyze()}
+                    className="h-12 w-full"
+                  >
+                    Analyze with AI
+                  </Button>
+                </>
+              ) : analysis.status === "encoding" ? (
+                <Text tone="muted" size="sm">
+                  Preparing your recordings…
+                </Text>
+              ) : analysis.status === "analyzing" ? (
+                <Text tone="muted" size="sm">
+                  Analyzing your recordings…
+                </Text>
+              ) : analysis.status === "error" ? (
+                <>
+                  <Text size="sm" role="alert">
+                    {analysis.errorMessage}
+                  </Text>
+                  <Button
+                    variant="secondary"
+                    onClick={() => void analysis.analyze()}
+                    className="h-12 w-full"
+                  >
+                    Try again
+                  </Button>
+                </>
+              ) : analysis.status === "ready" && analysis.insight ? (
+                <>
+                  <Text size="sm">{analysis.insight.encouragingSentence}</Text>
+                  {analysis.insight.whatImproved.length > 0 ? (
                     <div className="flex flex-col gap-1">
                       <Text size="sm" className="font-medium">
                         What improved
                       </Text>
-                      {aiInsight.whatImproved.map((item) => (
+                      {analysis.insight.whatImproved.map((item) => (
                         <Text key={item} tone="muted" size="sm">
                           • {item}
                         </Text>
                       ))}
                     </div>
                   ) : null}
-                  {aiInsight.whatDeclined.length > 0 ? (
+                  {analysis.insight.whatDeclined.length > 0 ? (
                     <div className="flex flex-col gap-1">
                       <Text size="sm" className="font-medium">
                         What declined
                       </Text>
-                      {aiInsight.whatDeclined.map((item) => (
+                      {analysis.insight.whatDeclined.map((item) => (
                         <Text key={item} tone="muted" size="sm">
                           • {item}
                         </Text>
@@ -258,7 +283,7 @@ export function SessionSummaryScreen({
                       Best moment
                     </Text>
                     <Text tone="muted" size="sm">
-                      {aiInsight.bestMoment}
+                      {analysis.insight.bestMoment}
                     </Text>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -266,7 +291,7 @@ export function SessionSummaryScreen({
                       Biggest opportunity
                     </Text>
                     <Text tone="muted" size="sm">
-                      {aiInsight.biggestOpportunity}
+                      {analysis.insight.biggestOpportunity}
                     </Text>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -274,7 +299,7 @@ export function SessionSummaryScreen({
                       Tomorrow&apos;s goal
                     </Text>
                     <Text tone="muted" size="sm">
-                      {aiInsight.tomorrowsGoal}
+                      {analysis.insight.tomorrowsGoal}
                     </Text>
                   </div>
                 </>
@@ -282,7 +307,7 @@ export function SessionSummaryScreen({
             </CardContent>
           </Card>
         </Reveal>
-      ) : null}
+      )}
 
       <NotificationOptInPrompt
         engagement={{
